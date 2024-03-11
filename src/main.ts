@@ -48,6 +48,9 @@ export const useStore = defineStore(STORE_NAME, {
         ...this.settings,
         ...partialSettings,
       }
+      this.save()
+    },
+    save() {
       localStorage.setItem(STORE_NAME, JSON.stringify(this.settings))
     },
   },
