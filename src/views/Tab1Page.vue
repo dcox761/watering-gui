@@ -67,6 +67,7 @@ const handleConnectClick = async () => {
     loading.value.$el.dismiss()
 
     // Switch to status tab
+    // TODO: Content flashes before changing to tab
     if (connected) {
       console.log(router)
       await router.push('/tabs/tab2')
