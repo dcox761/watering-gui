@@ -2,13 +2,13 @@
   <ion-page>
     <ion-header>
       <ion-toolbar>
-        <ion-title>Tab 1</ion-title>
+        <ion-title>Settings</ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content :fullscreen="true">
       <ion-header collapse="condense">
         <ion-toolbar>
-          <ion-title size="large">Tab 1</ion-title>
+          <ion-title size="large">Settings</ion-title>
         </ion-toolbar>
       </ion-header>
       <ion-list>
@@ -17,11 +17,10 @@
         </ion-item>
         <ion-item>
           <ion-button @click="handleConnectClick" id="connect-button">Connect</ion-button>
-          <ion-loading ref="loading" trigger="connect-button" message="Connecting ..."/>
+          <ion-loading ref="loading" message="Connecting ..."/>
         </ion-item>
       </ion-list>
       <div>{{  status }}</div>
-      <!-- <ExploreContainer name="Tab 1 page ..." /> -->
     </ion-content>
   </ion-page>
 </template>
@@ -31,7 +30,6 @@ import { storeToRefs } from 'pinia'
 import { useStore } from '../main'
   
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonInput, IonList, IonItem, IonButton, IonLoading } from '@ionic/vue';
-import ExploreContainer from '@/components/ExploreContainer.vue';
 import { ref } from 'vue'
 import axios from "axios";
 import { useRouter } from 'vue-router';
@@ -50,26 +48,28 @@ const handleConnectClick = async () => {
     //   apiAddress: settings.value.apiAddress
     // })
 
+    // instead of trigger="connect-button" 
+    loading.value.$el.present()
+
     var connected = false
     try {
       // check connection
       // TODO: use then instead of await
-      // TODO: simpler check connection API OR pass the data in another (non-persistent) Pinia store
-      const { data } = await axios.get(`http://${settings.value.apiAddress}:5000/status`);
-      status.value = data.log_size
+      const { data } = await axios.get(`http://${settings.value.apiAddress}:5000/`);
+      // status.value = data.name
       connected = true
     } catch (error:any) {
       console.log(error)
       status.value = `Unable to connect: ${error.message}`
     }
+
     // https://vuejs.org/guide/essentials/template-refs
     // Hint: the docs don't mention using $el
     loading.value.$el.dismiss()
 
     // Switch to status tab
-    // TODO: Content flashes before changing to tab
     if (connected) {
-      console.log(router)
+      // console.log(router)
       await router.push('/tabs/tab2')
     }
   }
