@@ -16,9 +16,6 @@
       <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
         <ion-refresher-content />
       </ion-refresher>
-      <div v-if="status && status.stations.length > 0">
-      </div>
-      <!-- TODO: show paused time remaining -->
       <ion-list v-if="status && status.stations.length > 0">
         <ion-item>
           <ion-grid>
@@ -29,10 +26,12 @@
                 <ion-button @click="handlePauseClick" v-if="status.pause_min == 0"><ion-icon slot="start"
                     :icon="pause" />Pause</ion-button>
               </ion-col>
+                <p v-if="status.pause_min > 0">Pausing for {{ Math.round(status.pause_min * 10)/10 }} min</p>
               <ion-col>
               </ion-col>
               <ion-col>
-                <ion-button class="ion-float-right" @click="handleStopClick" v-if="status.pause_min == 0"><ion-icon slot="start" :icon="stop"/>Stop</ion-button>
+                <ion-button class="ion-float-right" @click="handleStopClick" v-if="status.pause_min == 0">
+                  <ion-icon slot="start" :icon="stop"/>Stop/Clear</ion-button>
               </ion-col>
             </ion-row>
           </ion-grid>
@@ -59,6 +58,7 @@
           </ion-grid>
         </ion-item>
       </ion-list>
+      <IonText v-else>Watering queue is empty.</IonText>
     </ion-content>
   </ion-page>
 </template>
@@ -68,7 +68,7 @@ import { water, play, pause, stop } from "ionicons/icons";
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem,
   IonLabel, IonIcon, IonProgressBar, IonGrid, IonRow, IonCol,
-  IonRefresher, IonRefresherContent, IonButton, IonLoading
+  IonRefresher, IonRefresherContent, IonButton, IonLoading, IonText
 } from '@ionic/vue';
 
 import { storeToRefs } from 'pinia'
@@ -158,4 +158,5 @@ ion-icon {
   color: blue;
   float: right;
 }
+
 </style>
