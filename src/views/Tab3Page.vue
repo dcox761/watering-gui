@@ -16,7 +16,8 @@
       <ion-list v-if="programs && Object.keys(programs).length > 0">
         <ion-item v-for="program in Object.keys(programs).sort()">
           <!-- TODO: improve layout -->
-          <ion-button @click="handleStartClick(program)"><ion-icon slot="icon-only" :icon="play"/></ion-button>
+          <ion-button @click="apiAction('start/' + program, loading, '/tabs/tab2')"><ion-icon slot="icon-only"
+              :icon="play" /></ion-button>
           <ion-label>{{ program }}</ion-label>
           <ion-note class="ion-text-wrap ion-text-right">{{ programs[program] }}</ion-note>
         </ion-item>
@@ -34,22 +35,23 @@ import {
   IonRefresher, IonRefresherContent, IonButton, IonNote, IonLoading, IonText
 } from '@ionic/vue';
 
-import { storeToRefs } from 'pinia'
-import { useStore } from '../main'
 import { ref, onBeforeMount, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useStore } from '../store'
 import axios from "axios";
-import { useRouter } from 'vue-router';
+import { apiAction } from "../api"
 
 const store = useStore()
 const { settings, status, error } = storeToRefs(store)
 const loading = ref()
 const programs = ref()
-const router = useRouter()    // lookup router here, not inside click handler (avoid TypeError: (intermediate value)() is undefined)
 
 onBeforeMount(async () => {
+  // TODO: also if address changes
   await updatePrograms()
 })
 
+// TODO: move to API
 const updatePrograms = async () => {
   try {
     // TODO: use then instead of await
@@ -65,35 +67,9 @@ const updatePrograms = async () => {
   }
 }
 
-const postAction = async (action: string) => {
-  // console.log(`postAction: ${action}`)
-  loading.value.$el.present()
-  return axios.post(`http://${settings.value.apiAddress}:5000/${action}`).then((data) => {
-    loading.value.$el.dismiss()
-    // console.log(data)
-    // TODO: helper method in main (change to composition API store to access router)
-    return store.updateStatus().then(() => {
-      return router.push('/tabs/tab2')
-    })
-  }).catch((error) => {
-    loading.value.$el.dismiss()
-    console.log(error)
-    // TODO: format error nicely, ion-toast?
-    error.value = `Error: ${error.message}`
-  });
-}
-
-const handleStartClick = (program: string) => {
-  console.log(`click ${program}`)
-  return postAction(`start/${program}`)
-}
-
-
 /* TODO
 1. show schedule
 2. new tab 4? for events
 */
 </script>
-<style>
-
-</style>
+<style></style>

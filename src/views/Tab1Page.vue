@@ -26,20 +26,22 @@
 </template>
 
 <script setup lang="ts">
-import { storeToRefs } from 'pinia'
-import { useStore } from '../main'
-
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonInput, IonList, IonItem, IonButton, IonLoading } from '@ionic/vue';
-import { ref } from 'vue'
-import axios from "axios";
 import { useRouter } from 'vue-router';
+
+import { ref } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useStore } from '../store'
+import axios from "axios";
 
 const store = useStore()
 const { settings } = storeToRefs(store)
 const error_message = ref()
 const loading = ref()
 const router = useRouter()    // lookup router here, not inside click handler (avoid TypeError: (intermediate value)() is undefined)
+import { updateStatus } from "../api"
 
+// TODO: move to API
 const handleConnectClick = async () => {
   // console.log("CLICK: " + settings.value.apiAddress)
   // store should already be updated by Pinia, just need to save to local storage
@@ -58,7 +60,7 @@ const handleConnectClick = async () => {
     error_message.value = ""
 
     // console.log(data)
-    return store.updateStatus()
+    return updateStatus()
   })
   .then(() => router.push('/tabs/tab2'))
   .catch((error) => {

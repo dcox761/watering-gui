@@ -21,17 +21,17 @@
           <ion-grid>
             <ion-row>
               <ion-col>
-                <ion-button @click="handleClick('resume')" v-if="status.pause_min > 0"><ion-icon slot="start"
+                <ion-button @click="apiAction('resume', loading)" v-if="status.pause_min > 0"><ion-icon slot="start"
                     :icon="play" />Resume</ion-button>
-                <ion-button @click="handleClick('pause')" v-if="status.pause_min == 0"><ion-icon slot="start"
+                <ion-button @click="apiAction('pause', loading)" v-if="status.pause_min == 0"><ion-icon slot="start"
                     :icon="pause" />Pause</ion-button>
               </ion-col>
-                <p v-if="status.pause_min > 0">Pausing for {{ Math.round(status.pause_min * 10)/10 }} min</p>
+              <p v-if="status.pause_min > 0">Pausing for {{ Math.round(status.pause_min * 10) / 10 }} min</p>
               <ion-col>
               </ion-col>
               <ion-col>
-                <ion-button class="ion-float-right" @click="handleClick('stop')" v-if="status.pause_min == 0">
-                  <ion-icon slot="start" :icon="stop"/>Stop/Clear</ion-button>
+                <ion-button class="ion-float-right" @click="apiAction('stop', loading)" v-if="status.pause_min == 0">
+                  <ion-icon slot="start" :icon="stop" />Stop/Clear</ion-button>
               </ion-col>
             </ion-row>
           </ion-grid>
@@ -71,57 +71,35 @@ import {
   IonRefresher, IonRefresherContent, IonButton, IonLoading, IonText
 } from '@ionic/vue';
 
+import { ref, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useStore } from '../main'
-import { ref, onBeforeMount, onMounted } from 'vue'
-import axios from "axios";
+import { useStore } from '../store'
+import { updateStatus, apiAction } from "../api"
 
 const store = useStore()
 const { settings, status, error } = storeToRefs(store)
-const loading = ref()
 
+const loading = ref()
 
 // TODO: Content flashes switching from Tab1 after Connect (maybe because of delay to read status before mount)
 // onMounted also flashes
 onMounted(async () => {
   // may be reloading this tab directly without clicking Connect
   if (!status.value) {
-    return store.updateStatus()
+    return updateStatus()
   }
 })
 
 const handleRefresh = async (event: CustomEvent) => {
   // https://ionicframework.com/docs/api/refresher
-  // TODO: example uses setTimeout but then there is always delay?
-  return store.updateStatus()
-  .then(() => {
-    if (null != event.target) {
-      event.target.complete()
-    }
-  })
+  return updateStatus()
+    .then(() => {
+      if (event.target) {
+        event.target.complete()
+      }
+    })
 }
 
-const postAction = async (action: string) => {
-  // console.log(`postAction: ${action}`)
-  loading.value.$el.present()
-  return axios.post(`http://${settings.value.apiAddress}:5000/${action}`)
-  .then((data) => {
-    // console.log(data)
-    return store.updateStatus()
-  })
-  .catch((error) => {
-    console.log(error)
-    // TODO: format error nicely, red/centered, ion-toast?
-    error.value = `Error: ${error.message}`
-  })
-  .finally(() => {
-    loading.value.$el.dismiss()
-  })
-}
-
-const handleClick = async (action: string) => {
-  return postAction(action)
-}
 </script>
 
 <style>
@@ -139,5 +117,4 @@ ion-icon {
   color: blue;
   float: right;
 }
-
 </style>
