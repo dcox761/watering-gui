@@ -39,6 +39,7 @@ const getSettings = () => {
   return settings ? JSON.parse(settings) : getDefaultSettings()
 }
 
+// TODO: change to composition API
 // https://pinia.vuejs.org/core-concepts/
 export const useStore = defineStore(STORE_NAME, {
   state: () => ({
@@ -56,25 +57,30 @@ export const useStore = defineStore(STORE_NAME, {
     },
     async updateStatus() {
       // connect to API and retrieve status or set error
-      try {
-        // TODO: use then instead of await
-        // TODO: add loading with spinner (needs to be handled by component)
-        const { data } = await axios.get(`http://${this.settings.apiAddress}:5000/queue/status`);
-        console.log(`store.updateStatus: ${this.settings.apiAddress}`)
-        console.log(data)
-        this.status = data
+      console.log(`store.updateStatus: ${this.settings.apiAddress}`)
+
+      // TODO: add loading with spinner (needs to be handled by component)
+      return axios.get(`http://${this.settings.apiAddress}:5000/queue/status`)
+      .then(resp => {
+        console.log(resp)
+        this.status = resp.data
         this.error = ""
-      } catch (error: any) {
+      })
+      .catch(error => {
         console.log(error)
         this.status = null
         this.error = `Unable to connect: ${error.message}`
-      }
+      })
     },
     save() {
       localStorage.setItem(STORE_NAME, JSON.stringify(this.settings))
     },
   },
 })
+
+// TODO: API helpers in single class (store parameter) - single location for use of axios
+// POST always update status
+// status optionally redirect (need router)
 
 const pinia = createPinia()
 

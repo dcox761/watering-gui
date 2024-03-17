@@ -21,16 +21,16 @@
           <ion-grid>
             <ion-row>
               <ion-col>
-                <ion-button @click="handleResumeClick" v-if="status.pause_min > 0"><ion-icon slot="start"
+                <ion-button @click="handleClick('resume')" v-if="status.pause_min > 0"><ion-icon slot="start"
                     :icon="play" />Resume</ion-button>
-                <ion-button @click="handlePauseClick" v-if="status.pause_min == 0"><ion-icon slot="start"
+                <ion-button @click="handleClick('pause')" v-if="status.pause_min == 0"><ion-icon slot="start"
                     :icon="pause" />Pause</ion-button>
               </ion-col>
                 <p v-if="status.pause_min > 0">Pausing for {{ Math.round(status.pause_min * 10)/10 }} min</p>
               <ion-col>
               </ion-col>
               <ion-col>
-                <ion-button class="ion-float-right" @click="handleStopClick" v-if="status.pause_min == 0">
+                <ion-button class="ion-float-right" @click="handleClick('stop')" v-if="status.pause_min == 0">
                   <ion-icon slot="start" :icon="stop"/>Stop/Clear</ion-button>
               </ion-col>
             </ion-row>
@@ -80,19 +80,21 @@ const store = useStore()
 const { settings, status, error } = storeToRefs(store)
 const loading = ref()
 
-//const loading = ref()
 
 // TODO: Content flashes switching from Tab1 after Connect (maybe because of delay to read status before mount)
 // onMounted also flashes
-// onBeforeMount works, but not when coming from program selection
 onMounted(async () => {
-  return store.updateStatus()
+  // may be reloading this tab directly without clicking Connect
+  if (!status.value) {
+    return store.updateStatus()
+  }
 })
 
 const handleRefresh = async (event: CustomEvent) => {
   // https://ionicframework.com/docs/api/refresher
   // TODO: example uses setTimeout but then there is always delay?
-  return store.updateStatus().then(() => {
+  return store.updateStatus()
+  .then(() => {
     if (null != event.target) {
       event.target.complete()
     }
@@ -102,28 +104,23 @@ const handleRefresh = async (event: CustomEvent) => {
 const postAction = async (action: string) => {
   // console.log(`postAction: ${action}`)
   loading.value.$el.present()
-  return axios.post(`http://${settings.value.apiAddress}:5000/${action}`).then((data) => {
-    loading.value.$el.dismiss()
+  return axios.post(`http://${settings.value.apiAddress}:5000/${action}`)
+  .then((data) => {
     // console.log(data)
     return store.updateStatus()
-  }).catch((error) => {
-    loading.value.$el.dismiss()
+  })
+  .catch((error) => {
     console.log(error)
-    // TODO: format error nicely, ion-toast?
+    // TODO: format error nicely, red/centered, ion-toast?
     error.value = `Error: ${error.message}`
-  });
+  })
+  .finally(() => {
+    loading.value.$el.dismiss()
+  })
 }
 
-const handleResumeClick = async () => {
-  return postAction("resume")
-}
-
-const handlePauseClick = async () => {
-  return postAction("pause")
-}
-
-const handleStopClick = async () => {
-  return postAction("stop")
+const handleClick = async (action: string) => {
+  return postAction(action)
 }
 </script>
 

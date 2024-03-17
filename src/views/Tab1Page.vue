@@ -51,31 +51,24 @@ const handleConnectClick = async () => {
   // instead of trigger="connect-button" 
   loading.value.$el.present()
 
-  var connected = false
-  try {
-    // check connection
-    // TODO: use then instead of await
-    const { data } = await axios.get(`http://${settings.value.apiAddress}:5000/`);
+  // check connection
+  return axios.get(`http://${settings.value.apiAddress}:5000/`)
+  .then((data) => {
     console.log("handleConnectClick: connected")
     error_message.value = ""
-    connected = true
-  } catch (error: any) {
+
+    // console.log(data)
+    return store.updateStatus()
+  })
+  .then(() => router.push('/tabs/tab2'))
+  .catch((error) => {
     console.log(error)
+    // TODO: format error nicely, red/centered, ion-toast?
     error_message.value = `Unable to connect: ${error.message}`
-  }
-
-  // https://vuejs.org/guide/essentials/template-refs
-  // Hint: the docs don't mention using $el
-  loading.value.$el.dismiss()
-  
-
-  // Switch to status tab
-  if (connected) {
-    // console.log(router)
-    return store.updateStatus().then(() => {
-      return router.push('/tabs/tab2')
-    })
-  }
+  })
+  .finally(() => {
+    loading.value.$el.dismiss()
+  })
 }
 
 </script>
