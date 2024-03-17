@@ -20,7 +20,7 @@
           <ion-loading ref="loading" message="Connecting ..." />
         </ion-item>
       </ion-list>
-      <div>{{ status }}</div>
+      <div>{{ error_message }}</div>
     </ion-content>
   </ion-page>
 </template>
@@ -36,7 +36,7 @@ import { useRouter } from 'vue-router';
 
 const store = useStore()
 const { settings } = storeToRefs(store)
-const status = ref()
+const error_message = ref()
 const loading = ref()
 const router = useRouter()    // lookup router here, not inside click handler (avoid TypeError: (intermediate value)() is undefined)
 
@@ -56,21 +56,25 @@ const handleConnectClick = async () => {
     // check connection
     // TODO: use then instead of await
     const { data } = await axios.get(`http://${settings.value.apiAddress}:5000/`);
-    // status.value = data.name
+    console.log("handleConnectClick: connected")
+    error_message.value = ""
     connected = true
   } catch (error: any) {
     console.log(error)
-    status.value = `Unable to connect: ${error.message}`
+    error_message.value = `Unable to connect: ${error.message}`
   }
 
   // https://vuejs.org/guide/essentials/template-refs
   // Hint: the docs don't mention using $el
   loading.value.$el.dismiss()
+  
 
   // Switch to status tab
   if (connected) {
     // console.log(router)
-    await router.push('/tabs/tab2')
+    return store.updateStatus().then(() => {
+      return router.push('/tabs/tab2')
+    })
   }
 }
 

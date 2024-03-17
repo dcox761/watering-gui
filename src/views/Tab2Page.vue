@@ -11,7 +11,7 @@
           <ion-title size="large">Queue</ion-title>
         </ion-toolbar>
       </ion-header>
-      <div>{{ error_message }}</div>
+      <div>{{ error }}</div>
       <ion-loading ref="loading" />
       <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
         <ion-refresher-content />
@@ -58,7 +58,7 @@
           </ion-grid>
         </ion-item>
       </ion-list>
-      <IonText v-else>Watering queue is empty.</IonText>
+      <IonText v-else-if="status">Watering queue is empty.</IonText>
     </ion-content>
   </ion-page>
 </template>
@@ -77,56 +77,40 @@ import { ref, onBeforeMount, onMounted } from 'vue'
 import axios from "axios";
 
 const store = useStore()
-const { settings } = storeToRefs(store)
+const { settings, status, error } = storeToRefs(store)
 const loading = ref()
-const status = ref()
-const error_message = ref()
 
 //const loading = ref()
 
 // TODO: Content flashes switching from Tab1 after Connect (maybe because of delay to read status before mount)
 // onMounted also flashes
-onBeforeMount(async () => {
-  await updateStatus()
+// onBeforeMount works, but not when coming from program selection
+onMounted(async () => {
+  return store.updateStatus()
 })
-
-const updateStatus = async () => {
-  try {
-    // TODO: use then instead of await
-    // TODO: add loading with spinner
-    const { data } = await axios.get(`http://${settings.value.apiAddress}:5000/queue/status`);
-    // console.log(`Connected to ${settings.value.apiAddress}`)
-    // console.log(data)
-    status.value = data
-  } catch (error: any) {
-    console.log(error)
-    status.value = ""
-    error_message.value = `Unable to connect: ${error.message}`
-  }
-}
 
 const handleRefresh = async (event: CustomEvent) => {
   // https://ionicframework.com/docs/api/refresher
   // TODO: example uses setTimeout but then there is always delay?
-  updateStatus().then(() => {
+  return store.updateStatus().then(() => {
     if (null != event.target) {
       event.target.complete()
     }
   })
 }
 
-const postAction = (action: string) => {
-  console.log(`postAction: ${action}`)
+const postAction = async (action: string) => {
+  // console.log(`postAction: ${action}`)
   loading.value.$el.present()
   return axios.post(`http://${settings.value.apiAddress}:5000/${action}`).then((data) => {
     loading.value.$el.dismiss()
     // console.log(data)
-    return updateStatus()
+    return store.updateStatus()
   }).catch((error) => {
     loading.value.$el.dismiss()
     console.log(error)
-    // TODO: format error nicely
-    error_message.value = `Error: ${error.message}`
+    // TODO: format error nicely, ion-toast?
+    error.value = `Error: ${error.message}`
   });
 }
 
