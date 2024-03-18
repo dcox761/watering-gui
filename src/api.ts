@@ -1,8 +1,10 @@
+import { Ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useStore } from './store'
 import axios from "axios"
 import router from './router/index'
 
+// TODO: move the store into this file
 const store = useStore()
 const { settings, status, error } = storeToRefs(store)
 
@@ -32,44 +34,68 @@ export const updateStatus = async () => {
         .catch(err => {
             console.log(err)
             status.value = null
-            error.value = `Unable to connect: ${err.message}`
+            error.value = `Error: ${err.message}`
         })
 }
 
 
 /**
- * POST an action to the API.
+ * Send a GET/POST request to the API.
  * Use the loading component, if provided.
- * On success, update status and redirect to optional new URL.
+ * On success: 
+ * - update status
+ * - set Reference value
+ * - optionally redirect to new URL
  * 
- * @param action POST action
- * @param loading optional IonLoading to present and dismiss
- * @param new_route optional new URL
+ * TODO: helper methods to save providing all parameters
+ * 
+ * @param path request path
+ * @param method get (default get)/post
+ * @param update_status (default true) to update status
+ * @param loading optional Ref for IonLoading to present and dismiss
+ * @param new_route optional new route URL
+ * @param set_value optional Ref to store result data
  * @returns 
  */
-export const apiAction = async (action: string, loading?: any, new_route?: string) => {
+export const apiRequest = async (path: string, method: string = 'get', update_status: boolean = true, 
+    loading?: Ref, new_route?: string, set_value?: Ref) => {
     // console.log(`postAction: ${action}`)
+    // https://www.typescripttutorial.net/typescript-tutorial/typescript-optional-parameters/
     if (loading) {
-        loading.$el.present()
+        // .vue template can also use trigger 
+        loading.value.$el.present()
     }
-    return axios.post(`http://${settings.value.apiAddress}:5000/${action}`)
-        .then((data) => {
-            // console.log(data)
-            return updateStatus()
+    return axios({
+        method: method,
+        url: `http://${settings.value.apiAddress}:5000/${path}`
+    })
+        .then((resp) => {
+            // console.log(resp)
+            if (set_value) {
+                set_value.value = resp.data
+            }
+            // TODO: improve API to return status with response and save this additional request
+            if (update_status) {
+                return updateStatus()
+            }
         })
         .then(() => {
             if (new_route) {
-                router.push(new_route)
+                return router.push({ name: new_route })
             }
         })
         .catch((err) => {
             console.log(err)
+
+            // keep the status set, it may just be a POST that failed
+            // status.value = null
+
             // TODO: format error nicely, red/centered, ion-toast?
             error.value = `Error: ${err.message}`
         })
         .finally(() => {
             if (loading) {
-                loading.$el.dismiss()
+                loading.value.$el.dismiss()
             }
         })
 }
