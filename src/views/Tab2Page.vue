@@ -21,16 +21,16 @@
           <ion-grid>
             <ion-row>
               <ion-col>
-                <ion-button @click="apiAction('resume', loading)" v-if="status.pause_min > 0"><ion-icon slot="start"
+                <ion-button @click="handleClick('resume')" v-if="status.pause_min > 0"><ion-icon slot="start"
                     :icon="play" />Resume</ion-button>
-                <ion-button @click="apiAction('pause', loading)" v-if="status.pause_min == 0"><ion-icon slot="start"
+                <ion-button @click="handleClick('pause')" v-if="status.pause_min == 0"><ion-icon slot="start"
                     :icon="pause" />Pause</ion-button>
               </ion-col>
               <p v-if="status.pause_min > 0">Pausing for {{ Math.round(status.pause_min * 10) / 10 }} min</p>
               <ion-col>
               </ion-col>
               <ion-col>
-                <ion-button class="ion-float-right" @click="apiAction('stop', loading)" v-if="status.pause_min == 0">
+                <ion-button class="ion-float-right" @click="handleClick('stop')" v-if="status.pause_min == 0">
                   <ion-icon slot="start" :icon="stop" />Stop/Clear</ion-button>
               </ion-col>
             </ion-row>
@@ -74,7 +74,7 @@ import {
 import { ref, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useStore } from '../store'
-import { updateStatus, apiAction } from "../api"
+import { updateStatus, apiRequest } from "../api"
 
 const store = useStore()
 const { settings, status, error } = storeToRefs(store)
@@ -86,11 +86,13 @@ const loading = ref()
 onMounted(async () => {
   // may be reloading this tab directly without clicking Connect
   if (!status.value) {
+    console.log('onMounted')
     return updateStatus()
   }
 })
 
 const handleRefresh = async (event: CustomEvent) => {
+  console.log('handleRefresh')
   // https://ionicframework.com/docs/api/refresher
   return updateStatus()
     .then(() => {
@@ -98,6 +100,11 @@ const handleRefresh = async (event: CustomEvent) => {
         event.target.complete()
       }
     })
+}
+
+const handleClick = async (action: string) => {
+  console.log(`handleClick: ${action}`)
+  return apiRequest(action, 'post', undefined, loading)
 }
 
 </script>

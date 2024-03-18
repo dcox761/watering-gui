@@ -20,57 +20,43 @@
           <ion-loading ref="loading" message="Connecting ..." />
         </ion-item>
       </ion-list>
-      <div>{{ error_message }}</div>
+      <div>{{ error }}</div>
     </ion-content>
   </ion-page>
 </template>
 
 <script setup lang="ts">
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonInput, IonList, IonItem, IonButton, IonLoading } from '@ionic/vue';
-import { useRouter } from 'vue-router';
+import {
+  IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
+  IonInput, IonList, IonItem, IonButton, IonLoading
+} from '@ionic/vue';
 
 import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useStore } from '../store'
-import axios from "axios";
+import { apiRequest } from "../api"
 
 const store = useStore()
-const { settings } = storeToRefs(store)
-const error_message = ref()
-const loading = ref()
-const router = useRouter()    // lookup router here, not inside click handler (avoid TypeError: (intermediate value)() is undefined)
-import { updateStatus } from "../api"
+const { settings, status, error } = storeToRefs(store)
 
-// TODO: move to API
+const loading = ref()
+
 const handleConnectClick = async () => {
-  // console.log("CLICK: " + settings.value.apiAddress)
+  console.log("handleConnectClick")
   // store should already be updated by Pinia, just need to save to local storage
+  // TODO: activate and save on successful connection
   store.save()
   // store.updateSettings({
   //   apiAddress: settings.value.apiAddress
   // })
 
-  // instead of trigger="connect-button" 
-  loading.value.$el.present()
-
   // check connection
-  return axios.get(`http://${settings.value.apiAddress}:5000/`)
-  .then((data) => {
-    console.log("handleConnectClick: connected")
-    error_message.value = ""
-
-    // console.log(data)
-    return updateStatus()
-  })
-  .then(() => router.push('/tabs/tab2'))
-  .catch((error) => {
-    console.log(error)
-    // TODO: format error nicely, red/centered, ion-toast?
-    error_message.value = `Unable to connect: ${error.message}`
-  })
-  .finally(() => {
-    loading.value.$el.dismiss()
-  })
+  // TODO: nicer error - Unable to connect: message
+  return apiRequest('', undefined, undefined,
+    loading, 'queue')
+    .then((data) => {
+      console.log("handleConnectClick: connected")
+    })
 }
 
 </script>

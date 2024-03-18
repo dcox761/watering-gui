@@ -16,8 +16,7 @@
       <ion-list v-if="programs && Object.keys(programs).length > 0">
         <ion-item v-for="program in Object.keys(programs).sort()">
           <!-- TODO: improve layout -->
-          <ion-button @click="apiAction('start/' + program, loading, '/tabs/tab2')"><ion-icon slot="icon-only"
-              :icon="play" /></ion-button>
+          <ion-button @click="handleClick(program)"><ion-icon slot="icon-only" :icon="play" /></ion-button>
           <ion-label>{{ program }}</ion-label>
           <ion-note class="ion-text-wrap ion-text-right">{{ programs[program] }}</ion-note>
         </ion-item>
@@ -28,43 +27,41 @@
 </template>
 
 <script setup lang="ts">
-import { water, play, pause, stop } from "ionicons/icons";
+import { play } from "ionicons/icons";
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem,
-  IonLabel, IonIcon, IonProgressBar, IonGrid, IonRow, IonCol,
-  IonRefresher, IonRefresherContent, IonButton, IonNote, IonLoading, IonText
+  IonLabel, IonIcon, IonButton, IonNote, IonLoading, IonText
 } from '@ionic/vue';
 
-import { ref, onBeforeMount, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useStore } from '../store'
-import axios from "axios";
-import { apiAction } from "../api"
+import { apiRequest } from "../api"
 
 const store = useStore()
 const { settings, status, error } = storeToRefs(store)
+
 const loading = ref()
 const programs = ref()
 
-onBeforeMount(async () => {
-  // TODO: also if address changes
-  await updatePrograms()
+onMounted(async () => {
+  if (!programs.value) {
+    console.log('onMounted')
+    // TODO: also if address changes
+    await updatePrograms()
+  }
 })
 
-// TODO: move to API
 const updatePrograms = async () => {
-  try {
-    // TODO: use then instead of await
-    // TODO: add loading with spinner
-    const { data } = await axios.get(`http://${settings.value.apiAddress}:5000/programs`);
-    // console.log(`Connected to ${settings.value.apiAddress}`)
-    // console.log(data)
-    programs.value = data
-  } catch (error: any) {
-    console.log(error)
-    programs.value = ""
-    error.value = `Unable to connect: ${error.message}`
-  }
+  console.log('updatePrograms')
+  return apiRequest('programs', undefined, false,
+    loading, undefined, programs)
+}
+
+const handleClick = async (program: string) => {
+  console.log(`handleClick: ${program}`)
+  return apiRequest(`start/${program}`, 'post', undefined,
+    loading, 'queue')
 }
 
 /* TODO
