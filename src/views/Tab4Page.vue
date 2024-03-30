@@ -20,7 +20,8 @@
         <!-- TODO: sort -->
         <ion-item v-for="schedule in schedules">
           <ion-label>{{ parseDate(schedule["next_run"]) }}</ion-label>
-          <ion-note class="ion-text-wrap ion-text-right">{{ schedule["kwargs"]["program"] }}</ion-note>
+          <ion-note class="ion-text-wrap ion-text-right">{{ describeSchedule(schedule) }}</ion-note>
+          <!-- <ion-note class="ion-text-wrap ion-text-right">{{ schedule["kwargs"]["program"] }}</ion-note> -->
         </ion-item>
       </ion-list>
       <IonText v-else>No schedules available.</IonText>
@@ -85,7 +86,47 @@ const handleRefresh = async (event: CustomEvent) => {
     })
 }
 
+const describeSchedule = (schedule: any): string => {
+  var result = describeInterval(schedule) + ": " + 
+    // add space after comma to allow wrap
+    schedule["kwargs"]["program"].replaceAll(",",", ")
+  return result
+}
+
+function initCaps(str: string, max_length: any = undefined) {
+  return str[0].toUpperCase() + str.substring(1, max_length).toLowerCase();
+}
+
+// nicely format interval
+// eg. Daily, Every Sat, Every 2 Days
+function describeInterval(schedule: any): string {
+  var result = ""
+  // TODO: it may be a one off!
+  if (schedule.interval == 1) {
+    if (schedule.unit == 'days') {
+      result = "Daily"
+    } else if (schedule.unit == 'weeks') {
+      // var day_name = schedule.start_day
+      // if (day_name) {
+      //   day_name = initCaps(day_name, 3)
+      // }
+      // result = "Every " + day_name
+      // TODO: next date may have been adjusted and not match the day_name
+      result = "Weekly"
+    }
+  } else {
+    // result = "Every " + schedule.interval + " " + initCaps(schedule.unit)
+    // shorter
+    result = schedule.interval + " " + initCaps(schedule.unit)
+  }
+  return result
+}
+
+
+
+
 // TODO: why is this called twice for each entry?
+// TODO: it is also called each time any tab is selected
 const parseDate = (dateStr: string): string => {
   var result = ""
   try {
