@@ -8,8 +8,8 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig({
   plugins: [
     vue(),
-    VitePWA({ registerType: 'autoUpdate', manifest: false }),
-    legacy()
+    VitePWA({ registerType: 'autoUpdate', manifest: false })
+    // legacy()
   ],
   resolve: {
     alias: {

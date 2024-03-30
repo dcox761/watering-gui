@@ -12,6 +12,9 @@ To S3 bucket with static web hosting enabled and index.html for home and error p
 aws s3 sync --acl public-read --delete dist/ s3://public230319/
 ```
 
+## Update App
+Close and open again from Home.
+
 ### Icons
 
 ### Download and Convert

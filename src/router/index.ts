@@ -29,6 +29,11 @@ const routes: Array<RouteRecordRaw> = [
         name: 'programs',
         path: 'tab3',
         component: () => import('@/views/Tab3Page.vue')
+      },
+      {
+        name: 'schedule',
+        path: 'tab4',
+        component: () => import('@/views/Tab4Page.vue')
       }
     ]
   }
