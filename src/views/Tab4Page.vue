@@ -17,12 +17,19 @@
         <ion-refresher-content />
       </ion-refresher>
       <ion-list v-if="Array.isArray(schedules) && schedules.length > 0">
-        <!-- TODO: sort -->
-        <ion-item v-for="schedule in schedules">
+        <ion-card v-for="schedule in schedules">
+          <ion-card-header>
+            <ion-card-title>{{ parseDate(schedule["next_run"]) }}</ion-card-title>
+            <ion-card-subtitle>{{ describeInterval(schedule) }}</ion-card-subtitle>
+          </ion-card-header>
+
+          <ion-card-content>{{ describeStations(schedule) }}</ion-card-content>
+        </ion-card>
+
+        <!-- <ion-item v-for="schedule in schedules">
           <ion-label>{{ parseDate(schedule["next_run"]) }}</ion-label>
           <ion-note class="ion-text-wrap ion-text-right">{{ describeSchedule(schedule) }}</ion-note>
-          <!-- <ion-note class="ion-text-wrap ion-text-right">{{ schedule["kwargs"]["program"] }}</ion-note> -->
-        </ion-item>
+        </ion-item> -->
       </ion-list>
       <IonText v-else>No schedules available.</IonText>
     </ion-content>
@@ -34,6 +41,7 @@ import { play, thermometerOutline } from "ionicons/icons";
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem,
   IonLabel, IonIcon, IonButton, IonNote, IonLoading, IonText,
+  IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle,
   IonRefresher, IonRefresherContent
 } from '@ionic/vue';
 
@@ -87,15 +95,22 @@ const handleRefresh = async (event: CustomEvent) => {
 }
 
 const describeSchedule = (schedule: any): string => {
-  var result = describeInterval(schedule) + ": " + 
+  var result = describeInterval(schedule) + ": " +
     // add space after comma to allow wrap
-    schedule["kwargs"]["program"].replaceAll(",",", ")
+    schedule["kwargs"]["program"].replaceAll(",", ", ")
   return result
 }
 
 function initCaps(str: string, max_length: any = undefined) {
   return str[0].toUpperCase() + str.substring(1, max_length).toLowerCase();
 }
+
+const describeStations = (schedule: any): string => {
+  // add space after comma to allow wrap
+  var result = schedule["kwargs"]["program"].replaceAll(",", ", ")
+  return result
+}
+
 
 // nicely format interval
 // eg. Daily, Every Sat, Every 2 Days
@@ -115,9 +130,8 @@ function describeInterval(schedule: any): string {
       result = "Weekly"
     }
   } else {
-    // result = "Every " + schedule.interval + " " + initCaps(schedule.unit)
-    // shorter
-    result = schedule.interval + " " + initCaps(schedule.unit)
+    // use Every to explain repeating. 2 Days could mean 2 days from now
+    result = "Every " + schedule.interval + " " + initCaps(schedule.unit)
   }
   return result
 }
@@ -127,7 +141,7 @@ function describeInterval(schedule: any): string {
 
 // TODO: why is this called twice for each entry?
 // TODO: it is also called each time any tab is selected
-const parseDate = (dateStr: string): string => {
+function parseDate(dateStr: string): string {
   var result = ""
   try {
     const date = new Date(dateStr)
@@ -147,4 +161,3 @@ const parseDate = (dateStr: string): string => {
 }
 
 </script>
-

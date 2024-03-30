@@ -58,6 +58,7 @@
           </ion-grid>
         </ion-item>
       </ion-list>
+      <!-- Format nicely -->
       <IonText v-else-if="status">Watering queue is empty.</IonText>
     </ion-content>
   </ion-page>
