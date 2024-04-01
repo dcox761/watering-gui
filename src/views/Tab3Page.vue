@@ -5,23 +5,29 @@
         <ion-title>Programs</ion-title>
       </ion-toolbar>
     </ion-header>
-    <ion-content :fullscreen="true">
+    <ion-content padding :fullscreen="true">
       <ion-header collapse="condense">
         <ion-toolbar>
           <ion-title size="large">Programs</ion-title>
         </ion-toolbar>
       </ion-header>
-      <div>{{ error }}</div>
       <ion-loading ref="loading" />
+      <div>{{ error }}</div>
       <ion-list v-if="programs && Object.keys(programs).length > 0">
         <ion-item v-for="program in Object.keys(programs).sort()">
           <!-- TODO: improve layout -->
-          <ion-button @click="handleClick(program)"><ion-icon slot="icon-only" :icon="play" /></ion-button>
+          <ion-button  fill="clear" @click="handleClick(program)"><ion-icon slot="icon-only" :icon="play" /></ion-button>
           <ion-label>{{ program }}</ion-label>
           <ion-note class="ion-text-wrap ion-text-right">{{ programs[program] }}</ion-note>
         </ion-item>
       </ion-list>
-      <IonText v-else>No programs available.</IonText>
+      <ion-grid v-else>
+        <ion-row text-center>
+          <ion-col>
+            <ion-text>No programs available.</ion-text>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
     </ion-content>
   </ion-page>
 </template>
@@ -30,7 +36,8 @@
 import { play } from "ionicons/icons";
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem,
-  IonLabel, IonIcon, IonButton, IonNote, IonLoading, IonText
+  IonLabel, IonIcon, IonButton, IonNote, IonLoading,
+  IonGrid, IonRow, IonCol, IonText
 } from '@ionic/vue';
 
 import { ref, onMounted } from 'vue'

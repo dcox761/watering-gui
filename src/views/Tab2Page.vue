@@ -5,32 +5,33 @@
         <ion-title>Queue</ion-title>
       </ion-toolbar>
     </ion-header>
-    <ion-content :fullscreen="true">
+    <ion-content padding :fullscreen="true">
       <ion-header collapse="condense">
         <ion-toolbar>
           <ion-title size="large">Queue</ion-title>
         </ion-toolbar>
       </ion-header>
-      <div>{{ error }}</div>
       <ion-loading ref="loading" />
       <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
         <ion-refresher-content />
       </ion-refresher>
+      <div>{{ error }}</div>
       <ion-list v-if="status && status.stations.length > 0">
         <ion-item>
           <ion-grid>
             <ion-row>
               <ion-col>
-                <ion-button @click="handleClick('resume')" v-if="status.pause_min > 0"><ion-icon slot="start"
-                    :icon="play" />Resume</ion-button>
-                <ion-button @click="handleClick('pause')" v-if="status.pause_min == 0"><ion-icon slot="start"
-                    :icon="pause" />Pause</ion-button>
-              </ion-col>
-              <p v-if="status.pause_min > 0">Pausing for {{ Math.round(status.pause_min * 10) / 10 }} min</p>
-              <ion-col>
+                <ion-button fill="clear" @click="handleClick('resume')" v-if="status.pause_min > 0"><ion-icon
+                    slot="start" :icon="play" />Resume</ion-button>
+                <ion-button fill="clear" @click="handleClick('pause')" v-if="status.pause_min == 0"><ion-icon
+                    slot="start" :icon="pause" />Pause</ion-button>
               </ion-col>
               <ion-col>
-                <ion-button class="ion-float-right" @click="handleClick('stop')" v-if="status.pause_min == 0">
+                <ion-label v-if="status.pause_min > 0">Pausing for {{ Math.round(status.pause_min * 10) / 10 }} min</ion-label>
+              </ion-col>
+              <ion-col>
+                <ion-button fill="clear" class="ion-float-right" @click="handleClick('stop')"
+                  v-if="status.pause_min == 0">
                   <ion-icon slot="start" :icon="stop" />Stop/Clear</ion-button>
               </ion-col>
             </ion-row>
@@ -58,8 +59,13 @@
           </ion-grid>
         </ion-item>
       </ion-list>
-      <!-- Format nicely -->
-      <IonText v-else-if="status">Watering queue is empty.</IonText>
+      <ion-grid v-else-if="status">
+        <ion-row text-center>
+          <ion-col>
+            <ion-text>Watering queue is empty.</ion-text>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
     </ion-content>
   </ion-page>
 </template>

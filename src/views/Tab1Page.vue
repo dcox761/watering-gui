@@ -11,16 +11,20 @@
           <ion-title size="large">Settings</ion-title>
         </ion-toolbar>
       </ion-header>
-      <ion-list>
-        <ion-item>
-          <ion-input label="API Address" v-model="settings.apiAddress" />
-        </ion-item>
-        <ion-item>
-          <ion-button @click="handleConnectClick" id="connect-button">Connect</ion-button>
-          <ion-loading ref="loading" message="Connecting ..." />
-        </ion-item>
-      </ion-list>
+      <ion-loading ref="loading" message="Connecting ..." />
       <div>{{ error }}</div>
+      <ion-grid>
+        <ion-row>
+          <ion-col>
+            <ion-input label="API Address" v-model="settings.apiAddress" />
+          </ion-col>
+        </ion-row>
+        <ion-row>
+          <ion-col>
+            <ion-button fill="clear" @click="handleConnectClick" id="connect-button">Connect</ion-button>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
     </ion-content>
   </ion-page>
 </template>
@@ -28,6 +32,7 @@
 <script setup lang="ts">
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
+  IonGrid, IonRow, IonCol, 
   IonInput, IonList, IonItem, IonButton, IonLoading
 } from '@ionic/vue';
 

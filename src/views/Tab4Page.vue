@@ -5,7 +5,7 @@
         <ion-title>Schedule</ion-title>
       </ion-toolbar>
     </ion-header>
-    <ion-content :fullscreen="true">
+    <ion-content padding :fullscreen="true">
       <ion-header collapse="condense">
         <ion-toolbar>
           <ion-title size="large">Schedule</ion-title>
@@ -23,15 +23,25 @@
             <ion-card-subtitle>{{ describeInterval(schedule) }}</ion-card-subtitle>
           </ion-card-header>
 
-          <ion-card-content>{{ describeStations(schedule) }}</ion-card-content>
+          <ion-card-content>{{ describePrograms(schedule) }}</ion-card-content>
+          <ion-button fill="clear" @click="handleEditClick(schedule)">Edit</ion-button>
         </ion-card>
-
-        <!-- <ion-item v-for="schedule in schedules">
-          <ion-label>{{ parseDate(schedule["next_run"]) }}</ion-label>
-          <ion-note class="ion-text-wrap ion-text-right">{{ describeSchedule(schedule) }}</ion-note>
-        </ion-item> -->
       </ion-list>
-      <IonText v-else>No schedules available.</IonText>
+      <ion-grid v-else>
+        <ion-row text-center>
+          <ion-col>
+            <ion-text>No schedules available.</ion-text>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+      <ion-modal ref="editModal">
+        <ion-content class="ion-padding" v-if="selected">
+          <div class="ion-margin-top">
+            <ion-button fill="clear" @click="handleCloseClick()">Close</ion-button>
+            <ion-label>{{ describePrograms(selected) }}</ion-label>
+          </div>
+        </ion-content>
+      </ion-modal>
     </ion-content>
   </ion-page>
 </template>
@@ -40,7 +50,8 @@
 import { play, thermometerOutline } from "ionicons/icons";
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem,
-  IonLabel, IonIcon, IonButton, IonNote, IonLoading, IonText,
+  IonLabel, IonIcon, IonButton, IonNote, IonLoading, 
+  IonGrid, IonRow, IonCol, IonText, IonModal,
   IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle,
   IonRefresher, IonRefresherContent
 } from '@ionic/vue';
@@ -55,6 +66,8 @@ const { settings, status, error } = storeToRefs(store)
 
 const loading = ref()
 const schedules = ref()
+const selected = ref()
+const editModal = ref()
 
 onMounted(async () => {
   if (!schedules.value) {
@@ -94,6 +107,19 @@ const handleRefresh = async (event: CustomEvent) => {
     })
 }
 
+const handleEditClick = async (schedule: any) => {
+  console.log("handleEditClick")
+  selected.value = schedule
+  editModal.value.$el.present();
+}
+
+
+const handleCloseClick = async () => {
+  console.log("handleCloseClick")
+  selected.value = null
+  editModal.value.$el.dismiss();
+}
+
 const describeSchedule = (schedule: any): string => {
   var result = describeInterval(schedule) + ": " +
     // add space after comma to allow wrap
@@ -105,7 +131,7 @@ function initCaps(str: string, max_length: any = undefined) {
   return str[0].toUpperCase() + str.substring(1, max_length).toLowerCase();
 }
 
-const describeStations = (schedule: any): string => {
+const describePrograms = (schedule: any): string => {
   // add space after comma to allow wrap
   var result = schedule["kwargs"]["program"].replaceAll(",", ", ")
   return result
