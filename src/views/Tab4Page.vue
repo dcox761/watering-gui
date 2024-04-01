@@ -19,7 +19,7 @@
       <ion-list v-if="Array.isArray(schedules) && schedules.length > 0">
         <ion-card v-for="schedule in schedules">
           <ion-card-header>
-            <ion-card-title>{{ parseDate(schedule["next_run"]) }}</ion-card-title>
+            <ion-card-title>{{ formatDateTime(parseISODateTime(schedule["next_run"])) }}</ion-card-title>
             <ion-card-subtitle>{{ describeInterval(schedule) }}</ion-card-subtitle>
           </ion-card-header>
 
@@ -37,8 +37,18 @@
       <ion-modal ref="editModal">
         <ion-content class="ion-padding" v-if="selected">
           <div class="ion-margin-top">
+            <ion-datetime-button datetime="datetime"></ion-datetime-button>
+            <ion-modal :keep-contents-mounted="true">
+              <ion-datetime id="datetime" presentation="date-time" v-model=selected_dtm
+                :format-options="formatOptions"></ion-datetime></ion-modal>
+            <!-- <p><ion-label>{{ describePrograms(selected) }}</ion-label></p> -->
+            <ion-list v-for="program in listPrograms(selected)">
+              <!-- TODO: selection list of programs -->
+              <ion-item>
+                <ion-label>{{ program }}</ion-label>
+              </ion-item>
+            </ion-list>
             <ion-button fill="clear" @click="handleCloseClick()">Close</ion-button>
-            <ion-label>{{ describePrograms(selected) }}</ion-label>
           </div>
         </ion-content>
       </ion-modal>
@@ -47,10 +57,12 @@
 </template>
 
 <script setup lang="ts">
+import { format, utcToZonedTime, zonedTimeToUtc } from 'date-fns-tz';
 import { play, thermometerOutline } from "ionicons/icons";
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem,
-  IonLabel, IonIcon, IonButton, IonNote, IonLoading, 
+  IonLabel, IonIcon, IonButton, IonNote, IonLoading,
+  IonDatetime, IonDatetimeButton,
   IonGrid, IonRow, IonCol, IonText, IonModal,
   IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle,
   IonRefresher, IonRefresherContent
@@ -64,9 +76,25 @@ import { apiRequest } from "../api"
 const store = useStore()
 const { settings, status, error } = storeToRefs(store)
 
+const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+const formatOptions = {
+  date: {
+    weekday: 'short',
+    month: 'short',
+    day: '2-digit',
+    year: '2-digit'
+  },
+  time: {
+    hour: '2-digit',
+    minute: '2-digit',
+  },
+};
+
 const loading = ref()
 const schedules = ref()
 const selected = ref()
+const selected_dtm = ref()
 const editModal = ref()
 
 onMounted(async () => {
@@ -110,33 +138,51 @@ const handleRefresh = async (event: CustomEvent) => {
 const handleEditClick = async (schedule: any) => {
   console.log("handleEditClick")
   selected.value = schedule
+
+  // ion-datetime does not change the timezone
+  // parse and convert date to localtime
+  const dateTime = parseISODateTime(schedule.next_run)
+  if (dateTime) {
+    // Use date-fns-tz to convert from UTC to a zoned time
+    const zonedTime = utcToZonedTime(dateTime, userTimeZone)
+    selected_dtm.value = format(zonedTime, "yyyy-MM-dd'T'HH:mm:ssXXX", { timeZone: userTimeZone });
+  } else {
+    selected_dtm.value = null
+  }
+
   editModal.value.$el.present();
 }
 
-
 const handleCloseClick = async () => {
   console.log("handleCloseClick")
+
+  const zonedTime = parseISODateTime(selected_dtm.value)
+  if (zonedTime) {
+    // toISOString automatically converts to UTC
+    // Use date-fns-tz to convert from a zoned time to UTC
+    //const dateTime = zonedTimeToUtc(zonedTime, userTimeZone)
+
+    // this updates the Card automatically
+    selected.value.next_run = zonedTime.toISOString()
+  }
+  selected_dtm.value = null
   selected.value = null
   editModal.value.$el.dismiss();
-}
-
-const describeSchedule = (schedule: any): string => {
-  var result = describeInterval(schedule) + ": " +
-    // add space after comma to allow wrap
-    schedule["kwargs"]["program"].replaceAll(",", ", ")
-  return result
 }
 
 function initCaps(str: string, max_length: any = undefined) {
   return str[0].toUpperCase() + str.substring(1, max_length).toLowerCase();
 }
 
-const describePrograms = (schedule: any): string => {
-  // add space after comma to allow wrap
-  var result = schedule["kwargs"]["program"].replaceAll(",", ", ")
-  return result
+const listPrograms = (schedule: any): string[] => {
+  return schedule["kwargs"]["program"].split(",").sort()
 }
 
+
+const describePrograms = (schedule: any): string => {
+  // add space after comma to allow wrap
+  return schedule["kwargs"]["program"].replaceAll(",", ", ")
+}
 
 // nicely format interval
 // eg. Daily, Every Sat, Every 2 Days
@@ -162,26 +208,29 @@ function describeInterval(schedule: any): string {
   return result
 }
 
-
-
-
 // TODO: why is this called twice for each entry?
 // TODO: it is also called each time any tab is selected
-function parseDate(dateStr: string): string {
-  var result = ""
+function parseISODateTime(dateTimeStr: string): Date | null {
+  var result = null
   try {
-    const date = new Date(dateStr)
-    console.log(date.toISOString())
-    result = date.toLocaleString()
+    result = new Date(dateTimeStr)
+  } catch (TypeError) {
+    // ignore
+  }
+  return result
+}
+
+function formatDateTime(dateTime: Date | null) {
+  var result = ""
+  if (dateTime) {
+    // result = dateTime.toLocaleString()
     const options: Intl.DateTimeFormatOptions = {
       weekday: "short",
       day: "numeric",
       hour: "numeric",
       minute: "numeric"
     };
-    result = date.toLocaleString(undefined, options)
-  } catch (TypeError) {
-    // ignore
+    result = dateTime.toLocaleString(undefined, options)
   }
   return result
 }

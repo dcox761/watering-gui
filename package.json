@@ -20,6 +20,7 @@
     "@ionic/vue": "^7.0.0",
     "@ionic/vue-router": "^7.0.0",
     "axios": "^1.6.7",
+    "date-fns-tz": "^2.0.1",
     "ionicons": "^7.0.0",
     "pinia": "^2.1.7",
     "vue": "^3.3.0",
