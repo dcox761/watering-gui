@@ -5,7 +5,7 @@
         <ion-title>Schedule</ion-title>
       </ion-toolbar>
     </ion-header>
-    <ion-content padding :fullscreen="true">
+    <ion-content :fullscreen="true">
       <ion-header collapse="condense">
         <ion-toolbar>
           <ion-title size="large">Schedule</ion-title>
@@ -52,7 +52,8 @@
             </ion-row>
             <ion-row>
               <ion-col>
-                <ion-list v-for="program in scheduledPrograms">
+                <!-- TODO: Reduce space between items -->
+                <ion-list :inset="true" v-for="program in scheduledPrograms">
                   <ion-item>
                     <ion-checkbox v-model="program.selected">{{ program.name }}</ion-checkbox>
                   </ion-item>
@@ -61,7 +62,7 @@
             </ion-row>
             <ion-row>
               <ion-col>
-                <ion-button fill="clear" @click="handleCloseClick()">Close</ion-button>
+                <ion-button fill="clear" @click="handleApplyClick()">Apply</ion-button>
               </ion-col>
             </ion-row>
           </ion-grid>
@@ -188,7 +189,7 @@ const handleEditClick = async (schedule: any) => {
     selected_dtm.value = null
   }
 
-  const scheduledSet = new Set(schedule["kwargs"]["program"].split(","))
+  const scheduledSet = getScheduledPrograms(schedule)
   // console.log(scheduledPrograms)
   const allPrograms = Object.keys(programs.value).sort()
   // console.log(allPrograms)
@@ -196,18 +197,26 @@ const handleEditClick = async (schedule: any) => {
     return { name: p, selected: scheduledSet.has(p) } 
   });
 
-
   editModal.value.$el.present();
 }
 
+function getScheduledPrograms(schedule: any): Set<any> {
+  return new Set(schedule["kwargs"]["program"].split(","))
+}
+
+function setScheduledPrograms(schedule: any, programs: Set<any>) {
+  schedule["kwargs"]["program"] = Array.from(programs).join(",")
+}
+
 /**
- * Close button on Modal dialog has been clicked.
- * - set next_run adjusting time zone
+ * Apply button on Modal dialog has been clicked.
+ * - set next_run, adjusting for time zone
+ * - set programs selected from the list
  * - clear selected object
  * - close the dialog
  */
-const handleCloseClick = async () => {
-  console.log("handleCloseClick")
+const handleApplyClick = async () => {
+  console.log("handleApplyClick")
 
   const zonedTime = parseISODateTime(selected_dtm.value)
   if (zonedTime) {
@@ -218,7 +227,14 @@ const handleCloseClick = async () => {
     // this updates the Card automatically
     selected.value.next_run = zonedTime.toISOString()
   }
-  console.log(scheduledPrograms.value)
+
+  // console.log(scheduledPrograms.value)
+  const selectedPrograms = scheduledPrograms.value.filter((program: any) => {
+    return program.selected
+  })
+  setScheduledPrograms(selected.value, new Set(Object.values(selectedPrograms).map((program: any) => {
+    return program.name
+  })))
 
   selected_dtm.value = null
   selected.value = null
@@ -229,8 +245,7 @@ function initCaps(str: string, max_length: any = undefined) {
   return str[0].toUpperCase() + str.substring(1, max_length).toLowerCase();
 }
 
-
-const describePrograms = (schedule: any): string => {
+function describePrograms(schedule: any): string {
   // add space after comma to allow wrap
   return schedule["kwargs"]["program"].replaceAll(",", ", ")
 }
@@ -295,11 +310,18 @@ function formatDateTime(dateTime: Date | null) {
 
 
 <style>
+  /* Make the nested modal datetime stand out */
   ion-datetime {
     --background: #fff1f2;
     --background-rgb: 255, 241, 242;
 
     /* border-radius: 16px; */
     /* box-shadow: 0px 10px 15px 3px; */
+  }
+
+  /* Hack: remove spacing between list items - https://stackoverflow.com/questions/60365916/remove-spacing-in-ion-list */
+  ion-item {
+    margin-top: -20px; 
+    margin-bottom: -20px; 
   }
 </style>
