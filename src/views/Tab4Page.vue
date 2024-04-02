@@ -310,18 +310,22 @@ function formatDateTime(dateTime: Date | null) {
 
 
 <style>
-  /* Make the nested modal datetime stand out */
-  ion-datetime {
+  /* Make the nested modal datetime stand out 
+    Does not work on iOS Safari, can't see calendar
+  */
+  /* ion-datetime {
     --background: #fff1f2;
     --background-rgb: 255, 241, 242;
 
-    /* border-radius: 16px; */
-    /* box-shadow: 0px 10px 15px 3px; */
-  }
+    border-radius: 16px;
+    box-shadow: 0px 10px 15px 3px;
+  } */
 
-  /* Hack: remove spacing between list items - https://stackoverflow.com/questions/60365916/remove-spacing-in-ion-list */
-  ion-item {
+  /* Hack: remove spacing between list items - https://stackoverflow.com/questions/60365916/remove-spacing-in-ion-list 
+    Does not work on iOS Safari, lines are too small
+  */
+  /* ion-item {
     margin-top: -20px; 
     margin-bottom: -20px; 
-  }
+  } */
 </style>
