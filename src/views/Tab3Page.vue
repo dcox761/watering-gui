@@ -52,8 +52,8 @@ const loading = ref()
 const programs = ref()
 
 onMounted(async () => {
+  console.log('onMounted')
   if (!programs.value) {
-    console.log('onMounted')
     // TODO: also if address changes
     await updatePrograms()
   }

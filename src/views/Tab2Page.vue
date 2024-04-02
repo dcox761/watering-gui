@@ -92,8 +92,8 @@ const loading = ref()
 // onMounted also flashes
 onMounted(async () => {
   // may be reloading this tab directly without clicking Connect
+  console.log('onMounted')
   if (!status.value) {
-    console.log('onMounted')
     return updateStatus()
   }
 })

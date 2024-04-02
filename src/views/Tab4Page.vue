@@ -25,6 +25,7 @@
 
           <ion-card-content>{{ describePrograms(schedule) }}</ion-card-content>
           <ion-button fill="clear" @click="handleEditClick(schedule)">Edit</ion-button>
+          <ion-button fill="clear" @click="handleSkipClick(schedule)">Skip</ion-button>
         </ion-card>
       </ion-list>
       <ion-grid v-else>
@@ -36,20 +37,34 @@
       </ion-grid>
       <ion-modal ref="editModal">
         <ion-content class="ion-padding" v-if="selected">
-          <div class="ion-margin-top">
-            <ion-datetime-button datetime="datetime"></ion-datetime-button>
-            <ion-modal :keep-contents-mounted="true">
-              <ion-datetime id="datetime" presentation="date-time" v-model=selected_dtm
-                :format-options="formatOptions"></ion-datetime></ion-modal>
-            <!-- <p><ion-label>{{ describePrograms(selected) }}</ion-label></p> -->
-            <ion-list v-for="program in listPrograms(selected)">
-              <!-- TODO: selection list of programs -->
-              <ion-item>
-                <ion-label>{{ program }}</ion-label>
-              </ion-item>
-            </ion-list>
-            <ion-button fill="clear" @click="handleCloseClick()">Close</ion-button>
-          </div>
+          <ion-grid>
+            <ion-row>
+              <ion-col class="ion-padding-vertical ion-padding-start">Next Run:</ion-col>
+              <ion-col><ion-datetime-button datetime="datetime"></ion-datetime-button>
+                <ion-modal :keep-contents-mounted="true">
+                  <ion-datetime id="datetime" presentation="date-time" v-model=selected_dtm
+                    color="dark"
+                    :format-options="formatOptions"></ion-datetime></ion-modal>
+              </ion-col>
+            </ion-row>
+            <ion-row>
+              <ion-col class="ion-padding-vertical ion-padding-start">Programs:</ion-col>
+            </ion-row>
+            <ion-row>
+              <ion-col>
+                <ion-list v-for="program in scheduledPrograms">
+                  <ion-item>
+                    <ion-checkbox v-model="program.selected">{{ program.name }}</ion-checkbox>
+                  </ion-item>
+                </ion-list>
+              </ion-col>
+            </ion-row>
+            <ion-row>
+              <ion-col>
+                <ion-button fill="clear" @click="handleCloseClick()">Close</ion-button>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
         </ion-content>
       </ion-modal>
     </ion-content>
@@ -58,10 +73,10 @@
 
 <script setup lang="ts">
 import { format, utcToZonedTime, zonedTimeToUtc } from 'date-fns-tz';
-import { play, thermometerOutline } from "ionicons/icons";
+import { diceOutline, play, thermometerOutline } from "ionicons/icons";
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem,
-  IonLabel, IonIcon, IonButton, IonNote, IonLoading,
+  IonLabel, IonIcon, IonButton, IonNote, IonLoading, IonCheckbox,
   IonDatetime, IonDatetimeButton,
   IonGrid, IonRow, IonCol, IonText, IonModal,
   IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle,
@@ -93,17 +108,28 @@ const formatOptions = {
 
 const loading = ref()
 const schedules = ref()
-const selected = ref()
-const selected_dtm = ref()
-const editModal = ref()
+const programs = ref()
+const selected = ref()      // selected schedule
+const selected_dtm = ref()  // ISO date time in local time zone for picker
+const scheduledPrograms = ref() // all programs, selected for schedule
+const editModal = ref()     // modal dialog
 
 onMounted(async () => {
+  console.log('onMounted')
   if (!schedules.value) {
-    console.log('onMounted')
     // TODO: also if address changes
     await updateSchedules()
   }
+  // if (!programs.value) {
+  //   await updatePrograms()
+  // }
 })
+
+const updatePrograms = async () => {
+  console.log('updatePrograms')
+  return apiRequest('programs', undefined, false,
+    loading, undefined, programs)
+}
 
 const updateSchedules = async () => {
   console.log('updateSchedules')
@@ -112,9 +138,7 @@ const updateSchedules = async () => {
     loading, undefined, schedules).then(() => {
 
       // sort results by next run
-      // TODO: sometimes the result is not an array on second refresh and works again after a few more attempts
       // Result may be Error (eg: if memory allocation failed)
-      // TODO: API should return error code too
       const { compare } = Intl.Collator('en-US')
       const results = schedules.value
       console.log(results)
@@ -135,8 +159,22 @@ const handleRefresh = async (event: CustomEvent) => {
     })
 }
 
+const handleSkipClick = async (schedule: any) => {
+  console.log("handleSkipClick")
+
+}
+
+/**
+ * Edit button on a Card has been clicked.
+ * - set selected object
+ * - convert ISO date/time to local timezone for date time picker
+ * - prepare list of selected programs
+ * - show modal dialog
+ */
 const handleEditClick = async (schedule: any) => {
   console.log("handleEditClick")
+  await updatePrograms()
+
   selected.value = schedule
 
   // ion-datetime does not change the timezone
@@ -150,9 +188,24 @@ const handleEditClick = async (schedule: any) => {
     selected_dtm.value = null
   }
 
+  const scheduledSet = new Set(schedule["kwargs"]["program"].split(","))
+  // console.log(scheduledPrograms)
+  const allPrograms = Object.keys(programs.value).sort()
+  // console.log(allPrograms)
+  scheduledPrograms.value = allPrograms.map((p) => {
+    return { name: p, selected: scheduledSet.has(p) } 
+  });
+
+
   editModal.value.$el.present();
 }
 
+/**
+ * Close button on Modal dialog has been clicked.
+ * - set next_run adjusting time zone
+ * - clear selected object
+ * - close the dialog
+ */
 const handleCloseClick = async () => {
   console.log("handleCloseClick")
 
@@ -165,6 +218,8 @@ const handleCloseClick = async () => {
     // this updates the Card automatically
     selected.value.next_run = zonedTime.toISOString()
   }
+  console.log(scheduledPrograms.value)
+
   selected_dtm.value = null
   selected.value = null
   editModal.value.$el.dismiss();
@@ -174,18 +229,17 @@ function initCaps(str: string, max_length: any = undefined) {
   return str[0].toUpperCase() + str.substring(1, max_length).toLowerCase();
 }
 
-const listPrograms = (schedule: any): string[] => {
-  return schedule["kwargs"]["program"].split(",").sort()
-}
-
 
 const describePrograms = (schedule: any): string => {
   // add space after comma to allow wrap
   return schedule["kwargs"]["program"].replaceAll(",", ", ")
 }
 
-// nicely format interval
-// eg. Daily, Every Sat, Every 2 Days
+/**
+ * Nicely format interval.
+ * 
+ * eg. Daily, Every Sat, Every 2 Days
+ */
 function describeInterval(schedule: any): string {
   var result = ""
   // TODO: it may be a one off!
@@ -235,4 +289,17 @@ function formatDateTime(dateTime: Date | null) {
   return result
 }
 
+// TODO: set min max time min="2022-03-01T00:00:00" max="2022-05-31T23:59:59"
+// TODO: highlight other dates with schedule
 </script>
+
+
+<style>
+  ion-datetime {
+    --background: #fff1f2;
+    --background-rgb: 255, 241, 242;
+
+    /* border-radius: 16px; */
+    /* box-shadow: 0px 10px 15px 3px; */
+  }
+</style>
