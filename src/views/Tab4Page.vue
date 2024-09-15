@@ -39,34 +39,77 @@
         <ion-content class="ion-padding" v-if="selected">
           <ion-grid>
             <ion-row>
-              <ion-col class="ion-padding-vertical ion-padding-start">Next Run:</ion-col>
+              <ion-col class="ion-padding-start">Next Run:</ion-col>
               <ion-col><ion-datetime-button datetime="datetime"></ion-datetime-button>
                 <ion-modal :keep-contents-mounted="true">
                   <ion-datetime id="datetime" presentation="date-time" v-model=selected_dtm
-                    color="dark"
+                    class="custom-datetime"
                     :format-options="formatOptions"></ion-datetime></ion-modal>
               </ion-col>
             </ion-row>
             <ion-row>
-              <ion-col class="ion-padding-vertical ion-padding-start">Programs:</ion-col>
+              <ion-col class="ion-padding-start">Repeat:</ion-col>
+              <ion-col>
+                <ion-segment v-model=editRepeat>
+                  <ion-segment-button value="none">
+                    <ion-label>None</ion-label>
+                  </ion-segment-button>
+                  <ion-segment-button value="daily">
+                    <ion-label>Daily</ion-label>
+                  </ion-segment-button>
+                  <ion-segment-button value="weekly">
+                    <ion-label>Weekly</ion-label>
+                  </ion-segment-button>
+                </ion-segment>
+              </ion-col>
+            </ion-row>
+            <ion-row v-if="editRepeat === 'daily'">
+              <ion-col class="ion-padding-start">
+                <ion-select label="Interval:" v-model=editInterval>
+                  <ion-select-option value="1">1</ion-select-option>
+                  <ion-select-option value="2">2</ion-select-option>
+                  <ion-select-option value="3">3</ion-select-option>
+                  <ion-select-option value="4">4</ion-select-option>
+                  <ion-select-option value="5">5</ion-select-option>
+                  <ion-select-option value="6">6</ion-select-option>
+                  <ion-select-option value="7">7</ion-select-option>
+                </ion-select>
+              </ion-col>
+            </ion-row>
+            <ion-row v-if="editRepeat === 'weekly'">
+              <ion-col class="ion-padding-start">
+                <ion-select label="Weekday:" v-model=editWeekday>
+                  <ion-select-option value="monday">Monday</ion-select-option>
+                  <ion-select-option value="tuesday">Tuesday</ion-select-option>
+                  <ion-select-option value="wednesday">Wednesday</ion-select-option>
+                  <ion-select-option value="thursday">Thursday</ion-select-option>
+                  <ion-select-option value="friday">Friday</ion-select-option>
+                  <ion-select-option value="saturday">Saturday</ion-select-option>
+                  <ion-select-option value="sunday">Sunday</ion-select-option>
+                </ion-select>
+              </ion-col>
+            </ion-row>
+            <ion-row>
+              <ion-col class="ion-padding-start">Programs:</ion-col>
             </ion-row>
             <ion-row>
               <ion-col>
-                <!-- TODO: Reduce space between items -->
-                <ion-list :inset="true" v-for="program in scheduledPrograms">
-                  <ion-item>
+                <ion-list :inset="true">
+                  <ion-item v-for="program in scheduledPrograms" :key="program.name">
                     <ion-checkbox v-model="program.selected">{{ program.name }}</ion-checkbox>
                   </ion-item>
                 </ion-list>
               </ion-col>
             </ion-row>
-            <ion-row>
-              <ion-col>
-                <ion-button fill="clear" @click="handleApplyClick()">Apply</ion-button>
-              </ion-col>
-            </ion-row>
           </ion-grid>
         </ion-content>
+        <ion-footer>
+          <ion-toolbar>
+            <ion-buttons slot="end">
+              <ion-button color="primary" @click="handleApplyClick()">Apply</ion-button>
+            </ion-buttons>
+          </ion-toolbar>
+        </ion-footer>
       </ion-modal>
     </ion-content>
   </ion-page>
@@ -79,7 +122,9 @@ import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem,
   IonLabel, IonIcon, IonButton, IonNote, IonLoading, IonCheckbox,
   IonDatetime, IonDatetimeButton,
-  IonGrid, IonRow, IonCol, IonText, IonModal,
+  IonGrid, IonRow, IonCol, IonText, IonModal, IonSelect, IonSelectOption,
+  IonSegment, IonSegmentButton,
+  IonFooter, IonButtons,
   IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle,
   IonRefresher, IonRefresherContent
 } from '@ionic/vue';
@@ -113,6 +158,9 @@ const programs = ref()
 const selected = ref()      // selected schedule
 const selected_dtm = ref()  // ISO date time in local time zone for picker
 const scheduledPrograms = ref() // all programs, selected for schedule
+const editRepeat = ref()
+const editInterval = ref()
+const editWeekday = ref()
 const editModal = ref()     // modal dialog
 
 onMounted(async () => {
@@ -161,6 +209,7 @@ const handleRefresh = async (event: CustomEvent) => {
 }
 
 const handleSkipClick = async (schedule: any) => {
+  // TODO
   console.log("handleSkipClick")
 
 }
@@ -181,13 +230,17 @@ const handleEditClick = async (schedule: any) => {
   // ion-datetime does not change the timezone
   // parse and convert date to localtime
   const dateTime = parseISODateTime(schedule.next_run)
+  var dayOfWeek = 'monday'
   if (dateTime) {
     // Use date-fns-tz to convert from UTC to a zoned time
     const zonedTime = utcToZonedTime(dateTime, userTimeZone)
     selected_dtm.value = format(zonedTime, "yyyy-MM-dd'T'HH:mm:ssXXX", { timeZone: userTimeZone });
+    dayOfWeek = zonedTime.toLocaleString('en-US', { weekday: 'long' }).toLowerCase();
+    // console.log(dayOfWeek)
   } else {
     selected_dtm.value = null
   }
+  editWeekday.value = schedule.start_day ? schedule.start_day : dayOfWeek
 
   const scheduledSet = getScheduledPrograms(schedule)
   // console.log(scheduledPrograms)
@@ -196,6 +249,16 @@ const handleEditClick = async (schedule: any) => {
   scheduledPrograms.value = allPrograms.map((p) => {
     return { name: p, selected: scheduledSet.has(p) } 
   });
+
+  // console.log(schedule)
+  if (schedule.interval == 0) {
+    editRepeat.value = 'none'
+  } else if (schedule.unit == 'days') {
+    editRepeat.value = 'daily'
+  } else if (schedule.unit == 'weeks') {
+    editRepeat.value = 'weekly'
+  }
+  editInterval.value = schedule.interval ? String(schedule.interval) : '1'
 
   editModal.value.$el.present();
 }
@@ -236,6 +299,18 @@ const handleApplyClick = async () => {
     return program.name
   })))
 
+  if (editRepeat.value == 'none') {
+    selected.value.interval = 0
+    selected.value.unit = 'days'
+  } else if (editRepeat.value == 'daily') {
+    selected.value.interval = Number(editInterval.value)
+    selected.value.unit = 'days'
+  } else if (editRepeat.value == 'weekly') {
+    selected.value.interval = 1
+    selected.value.unit = 'weeks'
+    selected.value.start_day = editWeekday.value
+  }
+
   selected_dtm.value = null
   selected.value = null
   editModal.value.$el.dismiss();
@@ -262,13 +337,14 @@ function describeInterval(schedule: any): string {
     if (schedule.unit == 'days') {
       result = "Daily"
     } else if (schedule.unit == 'weeks') {
-      // var day_name = schedule.start_day
-      // if (day_name) {
-      //   day_name = initCaps(day_name, 3)
-      // }
-      // result = "Every " + day_name
+      var day_name = schedule.start_day
+      if (day_name) {
+        // day_name = initCaps(day_name, 3)
+        day_name = initCaps(day_name)
+      }
+      result = "Every " + day_name
       // TODO: next date may have been adjusted and not match the day_name
-      result = "Weekly"
+      // result = "Weekly"
     }
   } else {
     // use Every to explain repeating. 2 Days could mean 2 days from now
@@ -328,4 +404,12 @@ function formatDateTime(dateTime: Date | null) {
     margin-top: -20px; 
     margin-bottom: -20px; 
   } */
+
+  /* border around datetime picker */
+  .custom-datetime {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
 </style>

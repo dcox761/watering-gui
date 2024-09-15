@@ -1,9 +1,38 @@
 # Building
+
+As root
 ```
+apt install -y nodejs npm
+npm install -g @ionic/cli
+```
+
+```
+npm install
+
+ionic serve
+
 ionic build
 ```
 
 Create application in ./dist/
+
+# Upgrade to 8
+
+This breaks dependencies.
+```
+npm install npm-check-updates
+npx npm-check-updates -u
+```
+
+https://ionicframework.com/docs/updating/8-0
+
+TODO: review code changes, compare a new project template
+
+```
+npm install @ionic/vue@8 @ionic/vue-router@8
+npm upgrade
+```
+
 
 ## Upload to S3
 To S3 bucket with static web hosting enabled and index.html for home and error page.
