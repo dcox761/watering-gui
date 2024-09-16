@@ -34,5 +34,11 @@ export const useStore = defineStore(STORE_NAME, {
     save() {
       localStorage.setItem(STORE_NAME, JSON.stringify(this.settings))
     },
+    setError(message: string) {
+      this.error = message
+    },
+    clearError() {
+      this.error = ""
+    }
   },
 })

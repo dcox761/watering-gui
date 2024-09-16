@@ -4,7 +4,6 @@ import { useStore } from './store'
 import axios from "axios"
 import router from './router/index'
 
-// TODO: move the store into this file
 const store = useStore()
 const { settings, status, error } = storeToRefs(store)
 
@@ -29,12 +28,12 @@ export const updateStatus = async () => {
         .then(resp => {
             console.log(resp)
             status.value = resp.data
-            error.value = ""
+            store.clearError()
         })
         .catch(err => {
             console.log(err)
             status.value = null
-            error.value = `Error: ${err.message}`
+            store.setError(`Error: ${err.message}`)
         })
 }
 
@@ -90,8 +89,7 @@ export const apiRequest = async (path: string, method: string = 'get', update_st
             // keep the status set, it may just be a POST that failed
             // status.value = null
 
-            // TODO: format error nicely, red/centered, ion-toast?
-            error.value = `Error: ${err.message}`
+            store.setError(`Error: ${err.message}`)
         })
         .finally(() => {
             if (loading) {

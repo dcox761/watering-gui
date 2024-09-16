@@ -12,7 +12,9 @@
         </ion-toolbar>
       </ion-header>
       <ion-loading ref="loading" />
-      <div>{{ error }}</div>
+      <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
+        <ion-refresher-content />
+      </ion-refresher>
       <ion-list v-if="programs && Object.keys(programs).length > 0">
         <ion-item v-for="program in Object.keys(programs).sort()">
           <!-- TODO: improve layout -->
@@ -37,7 +39,7 @@ import { play } from "ionicons/icons";
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem,
   IonLabel, IonIcon, IonButton, IonNote, IonLoading,
-  IonGrid, IonRow, IonCol, IonText
+  IonGrid, IonRow, IonCol, IonText, IonRefresher, IonRefresherContent
 } from '@ionic/vue';
 
 import { ref, onMounted } from 'vue'
@@ -65,6 +67,17 @@ const updatePrograms = async () => {
     loading, undefined, programs)
 }
 
+const handleRefresh = async (event: CustomEvent) => {
+  console.log('handleRefresh')
+  return updatePrograms()
+    .then(() => {
+      if (event.target) {
+        (event.target as HTMLIonRefresherElement).complete()
+      }
+    })
+
+  // TODO: update programs too?
+}
 const handleClick = async (program: string) => {
   console.log(`handleClick: ${program}`)
   return apiRequest(`start/${program}`, 'post', undefined,

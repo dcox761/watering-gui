@@ -12,7 +12,6 @@
         </ion-toolbar>
       </ion-header>
       <ion-loading ref="loading" message="Connecting ..." />
-      <div>{{ error }}</div>
       <ion-grid>
         <ion-row>
           <ion-col>
@@ -33,7 +32,7 @@
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
   IonGrid, IonRow, IonCol, 
-  IonInput, IonList, IonItem, IonButton, IonLoading
+  IonInput, IonButton, IonLoading
 } from '@ionic/vue';
 
 import { ref } from 'vue'
@@ -60,6 +59,7 @@ const handleConnectClick = async () => {
   return apiRequest('', undefined, undefined,
     loading, 'queue')
     .then((data) => {
+      // TODO: don't show connected if there was an error!
       console.log("handleConnectClick: connected")
     })
 }

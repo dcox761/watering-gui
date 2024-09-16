@@ -15,7 +15,6 @@
       <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
         <ion-refresher-content />
       </ion-refresher>
-      <div>{{ error }}</div>
       <ion-list v-if="status && status.stations.length > 0">
         <ion-item>
           <ion-grid>

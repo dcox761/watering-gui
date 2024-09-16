@@ -12,7 +12,6 @@
         </ion-toolbar>
       </ion-header>
       <ion-loading ref="loading" />
-      <div>{{ error }}</div>
       <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
         <ion-refresher-content />
       </ion-refresher>
@@ -60,7 +59,6 @@
       <DeleteAlert :isOpen="isDeleteAlertOpen" header="Confirm Delete"
         message="Are you sure you want to delete this schedule?" @cancel="isDeleteAlertOpen = false"
         @delete="handleDeleteClick(selected); isDeleteAlertOpen = false" />
-      <ion-toast :isOpen="showErrorToast" :message="error" duration="5000" @didDismiss="resetError"></ion-toast>
     </ion-content>
   </ion-page>
 </template>
@@ -100,22 +98,6 @@ const schedules = ref()
 const programs = ref()
 const selected = ref()      // selected schedule
 const isDeleteAlertOpen = ref(false);
-const showErrorToast = ref(false);
-
-watch(error, (newError) => {
-  if (newError && newError !== '') {
-    console.log('watch:', newError);
-    showErrorToast.value = true;
-  }
-});
-
-const resetError = () => {
-  if (error.value !== '' || showErrorToast.value) {
-    console.log('resetError');
-    error.value = '';
-    showErrorToast.value = false;
-  }
-};
 
 onMounted(async () => {
   console.log('onMounted')
@@ -130,10 +112,9 @@ onMounted(async () => {
 })
 
 const updateSchedules = async () => {
-  resetError()
   console.log('updateSchedules')
   // TODO: rename API to schedules
-  return apiRequest('xschedule', undefined, false,
+  return apiRequest('schedule', undefined, false,
     loading, undefined, schedules).then(() => {
       sortSchedules(schedules)
     })
