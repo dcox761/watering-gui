@@ -15,7 +15,8 @@
           <ion-col><ion-datetime-button datetime="datetime"></ion-datetime-button>
             <ion-modal :keep-contents-mounted="true">
               <ion-datetime id="datetime" presentation="date-time" v-model=selected_dtm class="custom-datetime"
-                :min="minDate" :max="maxDate" :format-options="formatOptions"></ion-datetime></ion-modal>
+                :min="minDate" :max="maxDate" :format-options="formatOptions"></ion-datetime>
+            </ion-modal>
           </ion-col>
         </ion-row>
         <ion-row>
@@ -101,17 +102,16 @@ const editWeekday = ref()
 const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
 
 const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-
 const formatOptions = {
   date: {
-    weekday: 'short',
-    month: 'short',
-    day: '2-digit',
-    year: '2-digit'
+    weekday: 'short' as 'short',
+    month: 'short' as 'short',
+    day: '2-digit' as '2-digit',
+    year: '2-digit' as '2-digit'
   },
   time: {
-    hour: '2-digit',
-    minute: '2-digit',
+    hour: '2-digit' as '2-digit',
+    minute: '2-digit' as '2-digit',
   },
 }
 
@@ -158,7 +158,7 @@ watch(() => props.schedule, (schedule) => {
 
     const scheduledSet = getScheduledPrograms(schedule)
     // console.log(scheduledPrograms)
-    const allPrograms = Object.keys(props.programs).sort()
+    const allPrograms = props.programs ? Object.keys(props.programs).sort() : []
     // console.log(allPrograms)
     scheduledPrograms.value = allPrograms.map((p) => {
       return { name: p, selected: scheduledSet.has(p) }
@@ -204,23 +204,29 @@ function handleNewScheduleEntry(newDate: Date, oldVal: string) {
 }
 
 function handleExistingScheduleEntry(weekday: string) {
-  editWeekday.value = props.schedule.start_day ? props.schedule.start_day : weekday
+  editWeekday.value = props.schedule?.start_day ? props.schedule.start_day : weekday
 }
 
 interface Schedule {
   interval?: number
   new?: boolean
   start_day?: string
-  kwargs: {
-    program: string
+  kwargs?: {
+    program?: string
   }
 }
 
 function getScheduledPrograms(schedule: Schedule): Set<string> {
+  if (!schedule.kwargs || !schedule.kwargs.program) {
+    return new Set<string>()
+  }
   return new Set(schedule.kwargs.program.split(","))
 }
 
 function setScheduledPrograms(schedule: Schedule, programs: Set<string>) {
+  if (!schedule.kwargs) {
+    schedule.kwargs = { };
+  }
   schedule.kwargs.program = Array.from(programs).join(",")
 }
 
