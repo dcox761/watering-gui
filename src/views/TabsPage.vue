@@ -3,22 +3,22 @@
     <ion-tabs>
       <ion-router-outlet></ion-router-outlet>
       <ion-tab-bar slot="bottom">
-        <ion-tab-button tab="tab1" href="/tabs/tab1">
+        <ion-tab-button tab="settings" href="/tabs/settings">
           <ion-icon aria-hidden="true" :icon="settings" />
           <ion-label>Settings</ion-label>
         </ion-tab-button>
 
-        <ion-tab-button tab="tab2" href="/tabs/tab2">
+        <ion-tab-button tab="queue" href="/tabs/queue">
           <ion-icon aria-hidden="true" :icon="ellipse" />
           <ion-label>Queue</ion-label>
         </ion-tab-button>
 
-        <ion-tab-button tab="tab3" href="/tabs/tab3">
+        <ion-tab-button tab="programs" href="/tabs/programs">
           <ion-icon aria-hidden="true" :icon="square" />
           <ion-label>Programs</ion-label>
         </ion-tab-button>
 
-        <ion-tab-button tab="tab4" href="/tabs/tab4">
+        <ion-tab-button tab="schedule" href="/tabs/schedule">
           <ion-icon aria-hidden="true" :icon="time" />
           <ion-label>Schedule</ion-label>
         </ion-tab-button>
