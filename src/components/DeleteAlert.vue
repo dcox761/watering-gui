@@ -6,7 +6,6 @@
 import {
   IonAlert
 } from '@ionic/vue'
-import { defineProps, defineEmits } from 'vue'
 
 const props = defineProps({
   isOpen: Boolean,

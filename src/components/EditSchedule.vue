@@ -80,7 +80,7 @@ import {
   IonSegment, IonSegmentButton, IonSelect, IonSelectOption, IonTitle, IonToolbar
 } from '@ionic/vue'
 
-import { ref, watch, defineEmits, defineProps } from 'vue'
+import { ref, watch } from 'vue'
 import { parseISODateTime } from '../util'
 
 const props = defineProps({
