@@ -70,10 +70,10 @@ import {
   IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle,
   IonCol, IonContent, IonFab, IonFabButton, IonGrid, IonHeader, IonIcon, IonItem,
   IonItemOption, IonItemOptions, IonItemSliding, IonLoading, IonPage, IonRefresher,
-  IonRefresherContent, IonRow, IonText, IonTitle, IonToast, IonToolbar
+  IonRefresherContent, IonRow, IonText, IonTitle, IonToolbar
 } from '@ionic/vue'
 
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useStore } from '../store'
 import { apiRequest } from "../api"
@@ -138,6 +138,7 @@ const sortSchedules = (schedules: any) => {
 }
 
 const addSchedule = (schedules: any, schedule: any) => {
+  // TODO: or refresh instead?
   schedules.value.push(schedule)
   sortSchedules(schedules)
 }
@@ -171,11 +172,11 @@ const closeEditModal = () => {
   isEditModalOpen.value = false
 }
 
-const handleApply = (updatedSchedule: any) => {
+const handleApply = async (updatedSchedule: any) => {
   console.log('handleApply', updatedSchedule)
   if (isEditing.value) {
     // Update the existing schedule
-    // TODO: resort the schedule
+    // TODO: re-sort the schedule
   } else {
     // Add the new schedule
     if (currentSchedule.value && currentSchedule.value.new) {
@@ -183,7 +184,7 @@ const handleApply = (updatedSchedule: any) => {
       addSchedule(schedules, currentSchedule.value)
     }
   }
-  // TODO: upload changes
+  // TODO: upload changes (if any)
 }
 
 const handleSkipClick = async (schedule: any) => {
@@ -197,7 +198,7 @@ const presentDeleteConfirm = (schedule: any) => {
   isDeleteAlertOpen.value = true
 }
 
-const handleDeleteClick = (schedule: any) => {
+const handleDeleteClick = async (schedule: any) => {
   console.log('Delete schedule:', schedule)
   schedules.value = schedules.value.filter((s: any) => s !== schedule)
   // TODO: upload schedule if changed
@@ -210,7 +211,7 @@ const closeSlidingItem = () => {
   }
 }
 
-const handleAddClick = async () => {
+const handleAddClick = () => {
   console.log("handleAddClick")
 
   const now = new Date()
@@ -228,7 +229,6 @@ const handleAddClick = async () => {
     new: true
   }
 
-  // TODO: which functions should be async?
   openEditModal(false, newSchedule)
 }
 
