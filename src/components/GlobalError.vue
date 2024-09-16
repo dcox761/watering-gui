@@ -9,14 +9,14 @@
 </template>
 
 <script setup lang="ts">
-import { IonToast } from '@ionic/vue';
-import { storeToRefs } from 'pinia';
-import { useStore } from '../store';
+import { IonToast } from '@ionic/vue'
+import { storeToRefs } from 'pinia'
+import { useStore } from '../store'
 
-const store = useStore();
-const { error } = storeToRefs(store);
+const store = useStore()
+const { error } = storeToRefs(store)
 
 const clearError = () => {
-  store.clearError();
-};
+  store.clearError()
+}
 </script>

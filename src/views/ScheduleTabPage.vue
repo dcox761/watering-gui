@@ -64,40 +64,41 @@
 </template>
 
 <script setup lang="ts">
-import { add } from "ionicons/icons";
-import { addIcons } from 'ionicons';
+import { add } from "ionicons/icons"
+import { addIcons } from 'ionicons'
 import {
   IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle,
   IonCol, IonContent, IonFab, IonFabButton, IonGrid, IonHeader, IonIcon, IonItem,
   IonItemOption, IonItemOptions, IonItemSliding, IonLoading, IonPage, IonRefresher,
   IonRefresherContent, IonRow, IonText, IonTitle, IonToast, IonToolbar
-} from '@ionic/vue';
+} from '@ionic/vue'
 
 import { ref, onMounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useStore } from '../store'
 import { apiRequest } from "../api"
+import { parseISODateTime, formatDateTime } from '../util'
 
-import EditSchedule from '@/components/EditSchedule.vue';
-import DeleteAlert from '@/components/DeleteAlert.vue';
+import EditSchedule from '@/components/EditSchedule.vue'
+import DeleteAlert from '@/components/DeleteAlert.vue'
 
 // Register the add icon
 addIcons({
   add
-});
+})
 
 const store = useStore()
-const { settings, status, error } = storeToRefs(store)
+const { error } = storeToRefs(store)
 
-const isEditModalOpen = ref(false);
-const isEditing = ref(false);
-const currentSchedule = ref();
+const isEditModalOpen = ref(false)
+const isEditing = ref(false)
+const currentSchedule = ref()
 
 const loading = ref()
 const schedules = ref()
 const programs = ref()
 const selected = ref()      // selected schedule
-const isDeleteAlertOpen = ref(false);
+const isDeleteAlertOpen = ref(false)
 
 onMounted(async () => {
   console.log('onMounted')
@@ -161,17 +162,17 @@ const handleRefresh = async (event: CustomEvent) => {
 
 const openEditModal = (isEditingValue: boolean, schedule: any = null) => {
   closeSlidingItem()
-  isEditing.value = isEditingValue;
-  currentSchedule.value = schedule;
-  isEditModalOpen.value = true;
-};
+  isEditing.value = isEditingValue
+  currentSchedule.value = schedule
+  isEditModalOpen.value = true
+}
 
 const closeEditModal = () => {
-  isEditModalOpen.value = false;
-};
+  isEditModalOpen.value = false
+}
 
 const handleApply = (updatedSchedule: any) => {
-  console.log('handleApply', updatedSchedule);
+  console.log('handleApply', updatedSchedule)
   if (isEditing.value) {
     // Update the existing schedule
     // TODO: resort the schedule
@@ -183,7 +184,7 @@ const handleApply = (updatedSchedule: any) => {
     }
   }
   // TODO: upload changes
-};
+}
 
 const handleSkipClick = async (schedule: any) => {
   // TODO: skip to tomorrow or next schedule?
@@ -192,29 +193,29 @@ const handleSkipClick = async (schedule: any) => {
 }
 
 const presentDeleteConfirm = (schedule: any) => {
-  selected.value = schedule;
-  isDeleteAlertOpen.value = true;
-};
+  selected.value = schedule
+  isDeleteAlertOpen.value = true
+}
 
 const handleDeleteClick = (schedule: any) => {
-  console.log('Delete schedule:', schedule);
-  schedules.value = schedules.value.filter((s: any) => s !== schedule);
+  console.log('Delete schedule:', schedule)
+  schedules.value = schedules.value.filter((s: any) => s !== schedule)
   // TODO: upload schedule if changed
-};
+}
 
 const closeSlidingItem = () => {
-  const slidingItem = document.querySelector('ion-item-sliding');
+  const slidingItem = document.querySelector('ion-item-sliding')
   if (slidingItem) {
-    slidingItem.closeOpened();
+    slidingItem.closeOpened()
   }
-};
+}
 
 const handleAddClick = async () => {
   console.log("handleAddClick")
 
-  const now = new Date();
-  now.setMinutes(0, 0, 0);
-  now.setHours(now.getHours() + 1);
+  const now = new Date()
+  now.setMinutes(0, 0, 0)
+  now.setHours(now.getHours() + 1)
 
   const newSchedule = {
     id: Date.now(), // or any unique identifier
@@ -225,14 +226,14 @@ const handleAddClick = async () => {
       program: ''
     },
     new: true
-  };
+  }
 
   // TODO: which functions should be async?
-  openEditModal(false, newSchedule);
+  openEditModal(false, newSchedule)
 }
 
 function initCaps(str: string, max_length: any = undefined) {
-  return str[0].toUpperCase() + str.substring(1, max_length).toLowerCase();
+  return str[0].toUpperCase() + str.substring(1, max_length).toLowerCase()
 }
 
 function describePrograms(schedule: any): string {
@@ -265,33 +266,6 @@ function describeInterval(schedule: any): string {
   } else {
     // use Every to explain repeating. 2 Days could mean 2 days from now
     result = "Every " + schedule.interval + " " + initCaps(schedule.unit)
-  }
-  return result
-}
-
-// TODO: why is this called twice for each entry?
-// TODO: it is also called each time any tab is selected
-function parseISODateTime(dateTimeStr: string): Date | null {
-  var result = null
-  try {
-    result = new Date(dateTimeStr)
-  } catch (TypeError) {
-    // ignore
-  }
-  return result
-}
-
-function formatDateTime(dateTime: Date | null) {
-  var result = ""
-  if (dateTime) {
-    // result = dateTime.toLocaleString()
-    const options: Intl.DateTimeFormatOptions = {
-      weekday: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "numeric"
-    };
-    result = dateTime.toLocaleString(undefined, options)
   }
   return result
 }

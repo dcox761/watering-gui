@@ -18,7 +18,7 @@
       <ion-list v-if="programs && Object.keys(programs).length > 0">
         <ion-item v-for="program in Object.keys(programs).sort()">
           <!-- TODO: improve layout -->
-          <ion-button  fill="clear" @click="handleClick(program)"><ion-icon slot="icon-only" :icon="play" /></ion-button>
+          <ion-button fill="clear" @click="handleClick(program)"><ion-icon slot="icon-only" :icon="play" /></ion-button>
           <ion-label>{{ program }}</ion-label>
           <ion-note class="ion-text-wrap ion-text-right">{{ programs[program] }}</ion-note>
         </ion-item>
@@ -35,20 +35,20 @@
 </template>
 
 <script setup lang="ts">
-import { play } from "ionicons/icons";
+import { play } from "ionicons/icons"
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem,
   IonLabel, IonIcon, IonButton, IonNote, IonLoading,
   IonGrid, IonRow, IonCol, IonText, IonRefresher, IonRefresherContent
-} from '@ionic/vue';
+} from '@ionic/vue'
 
 import { ref, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useStore } from '../store'
 import { apiRequest } from "../api"
 
-const store = useStore()
-const { settings, status, error } = storeToRefs(store)
+// const store = useStore()
+// const { settings, status, error } = storeToRefs(store)
 
 const loading = ref()
 const programs = ref()

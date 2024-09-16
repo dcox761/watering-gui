@@ -31,9 +31,9 @@
 <script setup lang="ts">
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
-  IonGrid, IonRow, IonCol, 
+  IonGrid, IonRow, IonCol,
   IonInput, IonButton, IonLoading
-} from '@ionic/vue';
+} from '@ionic/vue'
 
 import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
@@ -41,7 +41,7 @@ import { useStore } from '../store'
 import { apiRequest } from "../api"
 
 const store = useStore()
-const { settings, status, error } = storeToRefs(store)
+const { settings } = storeToRefs(store)
 
 const loading = ref()
 

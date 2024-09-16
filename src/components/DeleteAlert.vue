@@ -5,32 +5,32 @@
 <script setup lang="ts">
 import {
   IonAlert
-} from '@ionic/vue';
-import { defineProps, defineEmits } from 'vue';
+} from '@ionic/vue'
+import { defineProps, defineEmits } from 'vue'
 
 const props = defineProps({
   isOpen: Boolean,
   header: String,
   message: String,
   buttons: Array
-});
+})
 
-const emit = defineEmits(['cancel', 'delete']);
+const emit = defineEmits(['cancel', 'delete'])
 
 const alertButtons = [
   {
     text: 'Cancel',
     role: 'cancel',
     handler: () => {
-      emit('cancel');
+      emit('cancel')
     }
   },
   {
     text: 'Delete',
     role: 'destructive',
     handler: () => {
-      emit('delete');
+      emit('delete')
     }
   }
-];
+]
 </script>

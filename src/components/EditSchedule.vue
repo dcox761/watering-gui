@@ -73,23 +73,24 @@
 </template>
 
 <script setup lang="ts">
-import { format, utcToZonedTime } from 'date-fns-tz';
+import { format, utcToZonedTime } from 'date-fns-tz'
 import {
   IonButton, IonButtons, IonCheckbox, IonCol, IonContent, IonDatetime, IonDatetimeButton,
   IonFooter, IonGrid, IonHeader, IonItem, IonLabel, IonList, IonModal, IonRow,
   IonSegment, IonSegmentButton, IonSelect, IonSelectOption, IonTitle, IonToolbar
-} from '@ionic/vue';
+} from '@ionic/vue'
 
 import { ref, watch, defineEmits, defineProps } from 'vue'
+import { parseISODateTime } from '../util'
 
 const props = defineProps({
   isOpen: Boolean,
   isEditing: Boolean,
   schedule: Object,
   programs: Object
-});
+})
 
-const emit = defineEmits(['close', 'apply']);
+const emit = defineEmits(['close', 'apply'])
 
 const selected_dtm = ref()      // ISO date time in local time zone for picker
 const scheduledPrograms = ref() // all programs, selected for schedule
@@ -97,9 +98,9 @@ const editRepeat = ref()
 const editInterval = ref()
 const editWeekday = ref()
 
-const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
 
-const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 const formatOptions = {
   date: {
@@ -112,21 +113,21 @@ const formatOptions = {
     hour: '2-digit',
     minute: '2-digit',
   },
-};
+}
 
 // Calculate the current date and the date 21 days from now
-const today = new Date();
-const maxDateObj = new Date();
-maxDateObj.setDate(today.getDate() + 21);
+const today = new Date()
+const maxDateObj = new Date()
+maxDateObj.setDate(today.getDate() + 21)
 
 // Format the dates to match the datetime-local input format
 const formatDate = (date: Date) => {
-  const pad = (num: number) => (num < 10 ? '0' + num : num);
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-};
+  const pad = (num: number) => (num < 10 ? '0' + num : num)
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
 
-const minDate = formatDate(today);
-const maxDate = formatDate(maxDateObj);
+const minDate = formatDate(today)
+const maxDate = formatDate(maxDateObj)
 // TODO: highlight other dates with schedule?
 
 /**
@@ -146,8 +147,8 @@ watch(() => props.schedule, (schedule) => {
     if (dateTime) {
       // Use date-fns-tz to convert from UTC to a zoned time
       const zonedTime = utcToZonedTime(dateTime, userTimeZone)
-      selected_dtm.value = format(zonedTime, "yyyy-MM-dd'T'HH:mm:ssXXX", { timeZone: userTimeZone });
-      // dayOfWeek = zonedTime.toLocaleString('en-US', { weekday: 'long' }).toLowerCase();
+      selected_dtm.value = format(zonedTime, "yyyy-MM-dd'T'HH:mm:ssXXX", { timeZone: userTimeZone })
+      // dayOfWeek = zonedTime.toLocaleString('en-US', { weekday: 'long' }).toLowerCase()
       // console.log(dayOfWeek)
     } else {
       // should not happen
@@ -160,8 +161,8 @@ watch(() => props.schedule, (schedule) => {
     const allPrograms = Object.keys(props.programs).sort()
     // console.log(allPrograms)
     scheduledPrograms.value = allPrograms.map((p) => {
-      return { name: p, selected: scheduledSet.has(p) } 
-    });
+      return { name: p, selected: scheduledSet.has(p) }
+    })
 
     // console.log(schedule)
     if (schedule.interval == 0) {
@@ -173,75 +174,63 @@ watch(() => props.schedule, (schedule) => {
     }
     editInterval.value = schedule.interval ? schedule.interval : 1
   }
-});
+})
 
 /**
  * Selected date/time has been changed.
  */
- watch(selected_dtm, (newVal, oldVal) => {
-  console.log(`selected_dtm changed from ${oldVal} to ${newVal}`);
+watch(selected_dtm, (newVal, oldVal) => {
+  console.log(`selected_dtm changed from ${oldVal} to ${newVal}`)
 
-  const newDate = parseISODateTime(newVal);
+  const newDate = parseISODateTime(newVal)
   if (newDate) {
-    const weekday = newDate.toLocaleString('en-US', { weekday: 'long' }).toLowerCase();
+    const weekday = newDate.toLocaleString('en-US', { weekday: 'long' }).toLowerCase()
 
     if (props.schedule) {
       if (props.schedule.new) {
-        handleNewScheduleEntry(newDate, oldVal);
+        handleNewScheduleEntry(newDate, oldVal)
       } else {
-        handleExistingScheduleEntry(weekday);
+        handleExistingScheduleEntry(weekday)
       }
     }
   }
-});
+})
 
 function handleNewScheduleEntry(newDate: Date, oldVal: string) {
-  const oldDate = parseISODateTime(oldVal);
+  const oldDate = parseISODateTime(oldVal)
   if (!oldDate || newDate.toDateString() !== oldDate.toDateString()) {
-    editWeekday.value = newDate.toLocaleString('en-US', { weekday: 'long' }).toLowerCase();
+    editWeekday.value = newDate.toLocaleString('en-US', { weekday: 'long' }).toLowerCase()
   }
 }
 
 function handleExistingScheduleEntry(weekday: string) {
-  editWeekday.value = props.schedule.start_day ? props.schedule.start_day : weekday;
+  editWeekday.value = props.schedule.start_day ? props.schedule.start_day : weekday
 }
 
 interface Schedule {
-  interval?: number;
-  new?: boolean;
-  start_day?: string;
+  interval?: number
+  new?: boolean
+  start_day?: string
   kwargs: {
-    program: string;
-  };
+    program: string
+  }
 }
 
 function getScheduledPrograms(schedule: Schedule): Set<string> {
-  return new Set(schedule.kwargs.program.split(","));
+  return new Set(schedule.kwargs.program.split(","))
 }
 
 function setScheduledPrograms(schedule: Schedule, programs: Set<string>) {
-  schedule.kwargs.program = Array.from(programs).join(",");
-}
-
-// TODO: why is this called twice for each entry?
-// TODO: it is also called each time any tab is selected
-function parseISODateTime(dateTimeStr: string): Date | null {
-  var result = null
-  try {
-    result = new Date(dateTimeStr)
-  } catch (TypeError) {
-    // ignore
-  }
-  return result
+  schedule.kwargs.program = Array.from(programs).join(",")
 }
 
 const closeModal = () => {
-  emit('close');
-};
+  emit('close')
+}
 
 const handleDismiss = () => {
-  closeModal();
-};
+  closeModal()
+}
 
 /**
  * Apply button on Modal dialog has been clicked.
@@ -288,19 +277,18 @@ const applyChanges = () => {
     schedule.interval = interval
   }
 
-  emit('apply', { });
-  closeModal();
-};
+  emit('apply', {})
+  closeModal()
+}
 
 </script>
 
 <style scoped>
-  /* border around datetime picker */
-  .custom-datetime {
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    padding: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-
+/* border around datetime picker */
+.custom-datetime {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
 </style>

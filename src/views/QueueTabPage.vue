@@ -26,7 +26,8 @@
                     slot="start" :icon="pause" />Pause</ion-button>
               </ion-col>
               <ion-col>
-                <ion-label v-if="status.pause_min > 0">Pausing for {{ Math.round(status.pause_min * 10) / 10 }} min</ion-label>
+                <ion-label v-if="status.pause_min > 0">Pausing for {{ Math.round(status.pause_min * 10) / 10 }}
+                  min</ion-label>
               </ion-col>
               <ion-col>
                 <ion-button fill="clear" class="ion-float-right" @click="handleClick('stop')"
@@ -70,12 +71,12 @@
 </template>
 
 <script setup lang="ts">
-import { water, play, pause, stop } from "ionicons/icons";
+import { water, play, pause, stop } from "ionicons/icons"
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem,
   IonLabel, IonIcon, IonProgressBar, IonGrid, IonRow, IonCol,
   IonRefresher, IonRefresherContent, IonButton, IonLoading, IonText
-} from '@ionic/vue';
+} from '@ionic/vue'
 
 import { ref, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
@@ -83,7 +84,7 @@ import { useStore } from '../store'
 import { updateStatus, apiRequest } from "../api"
 
 const store = useStore()
-const { settings, status, error } = storeToRefs(store)
+const { status } = storeToRefs(store)
 
 const loading = ref()
 
