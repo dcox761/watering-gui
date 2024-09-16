@@ -11,157 +11,111 @@
           <ion-title size="large">Schedule</ion-title>
         </ion-toolbar>
       </ion-header>
-      <div>{{ error }}</div>
       <ion-loading ref="loading" />
+      <div>{{ error }}</div>
       <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
         <ion-refresher-content />
       </ion-refresher>
-      <ion-list v-if="Array.isArray(schedules) && schedules.length > 0">
-        <ion-card v-for="schedule in schedules">
-          <ion-card-header>
-            <ion-card-title>{{ formatDateTime(parseISODateTime(schedule["next_run"])) }}</ion-card-title>
-            <ion-card-subtitle>{{ describeInterval(schedule) }}</ion-card-subtitle>
-          </ion-card-header>
-
-          <ion-card-content>{{ describePrograms(schedule) }}</ion-card-content>
-          <ion-button fill="clear" @click="handleEditClick(schedule)">Edit</ion-button>
-          <ion-button fill="clear" @click="handleSkipClick(schedule)">Skip</ion-button>
-        </ion-card>
-      </ion-list>
-      <ion-grid v-else>
-        <ion-row text-center>
-          <ion-col>
+      <ion-grid>
+        <ion-row v-if="Array.isArray(schedules) && schedules.length > 0" v-for="schedule in schedules"
+          :key="schedule.next_run">
+          <ion-col size="12">
+            <ion-item-sliding>
+              <ion-item>
+                <ion-card class="full-width-card">
+                  <ion-card-header>
+                    <ion-card-title>{{ formatDateTime(parseISODateTime(schedule["next_run"])) }}</ion-card-title>
+                    <ion-card-subtitle>{{ describeInterval(schedule) }}</ion-card-subtitle>
+                  </ion-card-header>
+                  <ion-card-content>{{ describePrograms(schedule) }}</ion-card-content>
+                </ion-card>
+              </ion-item>
+              <ion-item-options side="end">
+                <ion-item-option color="primary" @click="openEditModal(true, schedule)">
+                  Edit
+                </ion-item-option>
+                <ion-item-option color="warning" @click="handleSkipClick(schedule)">
+                  Skip
+                </ion-item-option>
+                <ion-item-option color="danger" @click="presentDeleteConfirm(schedule)">
+                  Delete
+                </ion-item-option>
+              </ion-item-options>
+            </ion-item-sliding>
+          </ion-col>
+        </ion-row>
+        <ion-row v-else>
+          <ion-col text-center>
             <ion-text>No schedules available.</ion-text>
           </ion-col>
         </ion-row>
       </ion-grid>
-      <ion-modal ref="editModal">
-        <ion-content class="ion-padding" v-if="selected">
-          <ion-grid>
-            <ion-row>
-              <ion-col class="ion-padding-start">Next Run:</ion-col>
-              <ion-col><ion-datetime-button datetime="datetime"></ion-datetime-button>
-                <ion-modal :keep-contents-mounted="true">
-                  <ion-datetime id="datetime" presentation="date-time" v-model=selected_dtm
-                    class="custom-datetime"
-                    :format-options="formatOptions"></ion-datetime></ion-modal>
-              </ion-col>
-            </ion-row>
-            <ion-row>
-              <ion-col class="ion-padding-start">Repeat:</ion-col>
-              <ion-col>
-                <ion-segment v-model=editRepeat>
-                  <ion-segment-button value="none">
-                    <ion-label>None</ion-label>
-                  </ion-segment-button>
-                  <ion-segment-button value="daily">
-                    <ion-label>Daily</ion-label>
-                  </ion-segment-button>
-                  <ion-segment-button value="weekly">
-                    <ion-label>Weekly</ion-label>
-                  </ion-segment-button>
-                </ion-segment>
-              </ion-col>
-            </ion-row>
-            <ion-row v-if="editRepeat === 'daily'">
-              <ion-col class="ion-padding-start">
-                <ion-select label="Interval:" v-model=editInterval>
-                  <ion-select-option value="1">1</ion-select-option>
-                  <ion-select-option value="2">2</ion-select-option>
-                  <ion-select-option value="3">3</ion-select-option>
-                  <ion-select-option value="4">4</ion-select-option>
-                  <ion-select-option value="5">5</ion-select-option>
-                  <ion-select-option value="6">6</ion-select-option>
-                  <ion-select-option value="7">7</ion-select-option>
-                </ion-select>
-              </ion-col>
-            </ion-row>
-            <ion-row v-if="editRepeat === 'weekly'">
-              <ion-col class="ion-padding-start">
-                <ion-select label="Weekday:" v-model=editWeekday>
-                  <ion-select-option value="monday">Monday</ion-select-option>
-                  <ion-select-option value="tuesday">Tuesday</ion-select-option>
-                  <ion-select-option value="wednesday">Wednesday</ion-select-option>
-                  <ion-select-option value="thursday">Thursday</ion-select-option>
-                  <ion-select-option value="friday">Friday</ion-select-option>
-                  <ion-select-option value="saturday">Saturday</ion-select-option>
-                  <ion-select-option value="sunday">Sunday</ion-select-option>
-                </ion-select>
-              </ion-col>
-            </ion-row>
-            <ion-row>
-              <ion-col class="ion-padding-start">Programs:</ion-col>
-            </ion-row>
-            <ion-row>
-              <ion-col>
-                <ion-list :inset="true">
-                  <ion-item v-for="program in scheduledPrograms" :key="program.name">
-                    <ion-checkbox v-model="program.selected">{{ program.name }}</ion-checkbox>
-                  </ion-item>
-                </ion-list>
-              </ion-col>
-            </ion-row>
-          </ion-grid>
-        </ion-content>
-        <ion-footer>
-          <ion-toolbar>
-            <ion-buttons slot="end">
-              <ion-button color="primary" @click="handleApplyClick()">Apply</ion-button>
-            </ion-buttons>
-          </ion-toolbar>
-        </ion-footer>
-      </ion-modal>
+      <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+        <ion-fab-button @click="handleAddClick">
+          <ion-icon name="add"></ion-icon>
+        </ion-fab-button>
+      </ion-fab>
+      <EditSchedule :isOpen="isEditModalOpen" :isEditing="isEditing" :schedule="currentSchedule" :programs="programs"
+        @close="closeEditModal" @apply="handleApply" />
+      <DeleteAlert :isOpen="isDeleteAlertOpen" header="Confirm Delete"
+        message="Are you sure you want to delete this schedule?" @cancel="isDeleteAlertOpen = false"
+        @delete="handleDeleteClick(selected); isDeleteAlertOpen = false" />
+      <ion-toast :isOpen="showErrorToast" :message="error" duration="5000" @didDismiss="resetError"></ion-toast>
     </ion-content>
   </ion-page>
 </template>
 
 <script setup lang="ts">
-import { format, utcToZonedTime, zonedTimeToUtc } from 'date-fns-tz';
-import { diceOutline, play, thermometerOutline } from "ionicons/icons";
+import { add } from "ionicons/icons";
+import { addIcons } from 'ionicons';
 import {
-  IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem,
-  IonLabel, IonIcon, IonButton, IonNote, IonLoading, IonCheckbox,
-  IonDatetime, IonDatetimeButton,
-  IonGrid, IonRow, IonCol, IonText, IonModal, IonSelect, IonSelectOption,
-  IonSegment, IonSegmentButton,
-  IonFooter, IonButtons,
   IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle,
-  IonRefresher, IonRefresherContent
+  IonCol, IonContent, IonFab, IonFabButton, IonGrid, IonHeader, IonIcon, IonItem,
+  IonItemOption, IonItemOptions, IonItemSliding, IonLoading, IonPage, IonRefresher,
+  IonRefresherContent, IonRow, IonText, IonTitle, IonToast, IonToolbar
 } from '@ionic/vue';
 
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useStore } from '../store'
 import { apiRequest } from "../api"
 
+import EditSchedule from '@/components/EditSchedule.vue';
+import DeleteAlert from '@/components/DeleteAlert.vue';
+
+// Register the add icon
+addIcons({
+  add
+});
+
 const store = useStore()
 const { settings, status, error } = storeToRefs(store)
 
-const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-const formatOptions = {
-  date: {
-    weekday: 'short',
-    month: 'short',
-    day: '2-digit',
-    year: '2-digit'
-  },
-  time: {
-    hour: '2-digit',
-    minute: '2-digit',
-  },
-};
+const isEditModalOpen = ref(false);
+const isEditing = ref(false);
+const currentSchedule = ref();
 
 const loading = ref()
 const schedules = ref()
 const programs = ref()
 const selected = ref()      // selected schedule
-const selected_dtm = ref()  // ISO date time in local time zone for picker
-const scheduledPrograms = ref() // all programs, selected for schedule
-const editRepeat = ref()
-const editInterval = ref()
-const editWeekday = ref()
-const editModal = ref()     // modal dialog
+const isDeleteAlertOpen = ref(false);
+const showErrorToast = ref(false);
+
+watch(error, (newError) => {
+  if (newError && newError !== '') {
+    console.log('watch:', newError);
+    showErrorToast.value = true;
+  }
+});
+
+const resetError = () => {
+  if (error.value !== '' || showErrorToast.value) {
+    console.log('resetError');
+    error.value = '';
+    showErrorToast.value = false;
+  }
+};
 
 onMounted(async () => {
   console.log('onMounted')
@@ -169,10 +123,42 @@ onMounted(async () => {
     // TODO: also if address changes
     await updateSchedules()
   }
-  // if (!programs.value) {
-  //   await updatePrograms()
-  // }
+
+  if (!programs.value) {
+    await updatePrograms()
+  }
 })
+
+const updateSchedules = async () => {
+  resetError()
+  console.log('updateSchedules')
+  // TODO: rename API to schedules
+  return apiRequest('xschedule', undefined, false,
+    loading, undefined, schedules).then(() => {
+      sortSchedules(schedules)
+    })
+}
+
+const sortSchedules = (schedules: any) => {
+  // sort results by next run
+  // Result may be Error (eg: if memory allocation failed)
+  const { compare } = Intl.Collator('en-US')
+  const results = schedules.value
+  if (results) {
+    console.log(results)
+    if (Array.isArray(results)) {
+      results.sort((a, b) => compare(a.next_run, b.next_run))
+      schedules.value = results
+    }
+  } else {
+    console.log(error.value)
+  }
+}
+
+const addSchedule = (schedules: any, schedule: any) => {
+  schedules.value.push(schedule)
+  sortSchedules(schedules)
+}
 
 const updatePrograms = async () => {
   console.log('updatePrograms')
@@ -180,140 +166,88 @@ const updatePrograms = async () => {
     loading, undefined, programs)
 }
 
-const updateSchedules = async () => {
-  console.log('updateSchedules')
-  // TODO: rename API to schedules
-  return apiRequest('schedule', undefined, false,
-    loading, undefined, schedules).then(() => {
-
-      // sort results by next run
-      // Result may be Error (eg: if memory allocation failed)
-      const { compare } = Intl.Collator('en-US')
-      const results = schedules.value
-      console.log(results)
-      if (Array.isArray(results)) {
-        results.sort((a, b) => compare(a.next_run, b.next_run))
-        schedules.value = results
-      }
-    })
-}
-
 const handleRefresh = async (event: CustomEvent) => {
   console.log('handleRefresh')
   return updateSchedules()
     .then(() => {
       if (event.target) {
-        event.target.complete()
+        (event.target as HTMLIonRefresherElement).complete()
       }
     })
+
+  // TODO: update programs too?
 }
+
+const openEditModal = (isEditingValue: boolean, schedule: any = null) => {
+  closeSlidingItem()
+  isEditing.value = isEditingValue;
+  currentSchedule.value = schedule;
+  isEditModalOpen.value = true;
+};
+
+const closeEditModal = () => {
+  isEditModalOpen.value = false;
+};
+
+const handleApply = (updatedSchedule: any) => {
+  console.log('handleApply', updatedSchedule);
+  if (isEditing.value) {
+    // Update the existing schedule
+    // TODO: resort the schedule
+  } else {
+    // Add the new schedule
+    if (currentSchedule.value && currentSchedule.value.new) {
+      delete currentSchedule.value.new
+      addSchedule(schedules, currentSchedule.value)
+    }
+  }
+  // TODO: upload changes
+};
 
 const handleSkipClick = async (schedule: any) => {
-  // TODO
-  console.log("handleSkipClick")
-
+  // TODO: skip to tomorrow or next schedule?
+  console.log("TODO handleSkipClick")
+  closeSlidingItem()
 }
 
-/**
- * Edit button on a Card has been clicked.
- * - set selected object
- * - convert ISO date/time to local timezone for date time picker
- * - prepare list of selected programs
- * - show modal dialog
- */
-const handleEditClick = async (schedule: any) => {
-  console.log("handleEditClick")
-  await updatePrograms()
+const presentDeleteConfirm = (schedule: any) => {
+  selected.value = schedule;
+  isDeleteAlertOpen.value = true;
+};
 
-  selected.value = schedule
+const handleDeleteClick = (schedule: any) => {
+  console.log('Delete schedule:', schedule);
+  schedules.value = schedules.value.filter((s: any) => s !== schedule);
+  // TODO: upload schedule if changed
+};
 
-  // ion-datetime does not change the timezone
-  // parse and convert date to localtime
-  const dateTime = parseISODateTime(schedule.next_run)
-  var dayOfWeek = 'monday'
-  if (dateTime) {
-    // Use date-fns-tz to convert from UTC to a zoned time
-    const zonedTime = utcToZonedTime(dateTime, userTimeZone)
-    selected_dtm.value = format(zonedTime, "yyyy-MM-dd'T'HH:mm:ssXXX", { timeZone: userTimeZone });
-    dayOfWeek = zonedTime.toLocaleString('en-US', { weekday: 'long' }).toLowerCase();
-    // console.log(dayOfWeek)
-  } else {
-    selected_dtm.value = null
+const closeSlidingItem = () => {
+  const slidingItem = document.querySelector('ion-item-sliding');
+  if (slidingItem) {
+    slidingItem.closeOpened();
   }
-  editWeekday.value = schedule.start_day ? schedule.start_day : dayOfWeek
+};
 
-  const scheduledSet = getScheduledPrograms(schedule)
-  // console.log(scheduledPrograms)
-  const allPrograms = Object.keys(programs.value).sort()
-  // console.log(allPrograms)
-  scheduledPrograms.value = allPrograms.map((p) => {
-    return { name: p, selected: scheduledSet.has(p) } 
-  });
+const handleAddClick = async () => {
+  console.log("handleAddClick")
 
-  // console.log(schedule)
-  if (schedule.interval == 0) {
-    editRepeat.value = 'none'
-  } else if (schedule.unit == 'days') {
-    editRepeat.value = 'daily'
-  } else if (schedule.unit == 'weeks') {
-    editRepeat.value = 'weekly'
-  }
-  editInterval.value = schedule.interval ? String(schedule.interval) : '1'
+  const now = new Date();
+  now.setMinutes(0, 0, 0);
+  now.setHours(now.getHours() + 1);
 
-  editModal.value.$el.present();
-}
+  const newSchedule = {
+    id: Date.now(), // or any unique identifier
+    next_run: now.toISOString(),
+    interval: 0,
+    unit: 'days',
+    kwargs: {
+      program: ''
+    },
+    new: true
+  };
 
-function getScheduledPrograms(schedule: any): Set<any> {
-  return new Set(schedule["kwargs"]["program"].split(","))
-}
-
-function setScheduledPrograms(schedule: any, programs: Set<any>) {
-  schedule["kwargs"]["program"] = Array.from(programs).join(",")
-}
-
-/**
- * Apply button on Modal dialog has been clicked.
- * - set next_run, adjusting for time zone
- * - set programs selected from the list
- * - clear selected object
- * - close the dialog
- */
-const handleApplyClick = async () => {
-  console.log("handleApplyClick")
-
-  const zonedTime = parseISODateTime(selected_dtm.value)
-  if (zonedTime) {
-    // toISOString automatically converts to UTC
-    // Use date-fns-tz to convert from a zoned time to UTC
-    //const dateTime = zonedTimeToUtc(zonedTime, userTimeZone)
-
-    // this updates the Card automatically
-    selected.value.next_run = zonedTime.toISOString()
-  }
-
-  // console.log(scheduledPrograms.value)
-  const selectedPrograms = scheduledPrograms.value.filter((program: any) => {
-    return program.selected
-  })
-  setScheduledPrograms(selected.value, new Set(Object.values(selectedPrograms).map((program: any) => {
-    return program.name
-  })))
-
-  if (editRepeat.value == 'none') {
-    selected.value.interval = 0
-    selected.value.unit = 'days'
-  } else if (editRepeat.value == 'daily') {
-    selected.value.interval = Number(editInterval.value)
-    selected.value.unit = 'days'
-  } else if (editRepeat.value == 'weekly') {
-    selected.value.interval = 1
-    selected.value.unit = 'weeks'
-    selected.value.start_day = editWeekday.value
-  }
-
-  selected_dtm.value = null
-  selected.value = null
-  editModal.value.$el.dismiss();
+  // TODO: which functions should be async?
+  openEditModal(false, newSchedule);
 }
 
 function initCaps(str: string, max_length: any = undefined) {
@@ -332,8 +266,9 @@ function describePrograms(schedule: any): string {
  */
 function describeInterval(schedule: any): string {
   var result = ""
-  // TODO: it may be a one off!
-  if (schedule.interval == 1) {
+  if (schedule.interval == 0) {
+    result = "One off"
+  } else if (schedule.interval == 1) {
     if (schedule.unit == 'days') {
       result = "Daily"
     } else if (schedule.unit == 'weeks') {
@@ -380,36 +315,10 @@ function formatDateTime(dateTime: Date | null) {
   return result
 }
 
-// TODO: set min max time min="2022-03-01T00:00:00" max="2022-05-31T23:59:59"
-// TODO: highlight other dates with schedule
 </script>
 
-
-<style>
-  /* Make the nested modal datetime stand out 
-    Does not work on iOS Safari, can't see calendar
-  */
-  /* ion-datetime {
-    --background: #fff1f2;
-    --background-rgb: 255, 241, 242;
-
-    border-radius: 16px;
-    box-shadow: 0px 10px 15px 3px;
-  } */
-
-  /* Hack: remove spacing between list items - https://stackoverflow.com/questions/60365916/remove-spacing-in-ion-list 
-    Does not work on iOS Safari, lines are too small
-  */
-  /* ion-item {
-    margin-top: -20px; 
-    margin-bottom: -20px; 
-  } */
-
-  /* border around datetime picker */
-  .custom-datetime {
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 10px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+<style scoped>
+.full-width-card {
+  width: 100%;
 }
 </style>
