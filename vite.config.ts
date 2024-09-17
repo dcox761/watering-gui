@@ -16,6 +16,9 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  define: {
+    'process.env.BUILD_DATE': JSON.stringify(new Date().toISOString())
+  },
   test: {
     globals: true,
     environment: 'jsdom'

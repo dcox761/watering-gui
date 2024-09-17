@@ -25,13 +25,18 @@
         </ion-row>
       </ion-grid>
     </ion-content>
+    <ion-footer>
+      <ion-toolbar>
+        <ion-title>Build Date: {{ buildDate }}</ion-title>
+      </ion-toolbar>
+    </ion-footer>
   </ion-page>
 </template>
 
 <script setup lang="ts">
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
-  IonGrid, IonRow, IonCol,
+  IonGrid, IonRow, IonCol, IonFooter,
   IonInput, IonButton, IonLoading
 } from '@ionic/vue'
 
@@ -44,6 +49,8 @@ const store = useStore()
 const { settings } = storeToRefs(store)
 
 const loading = ref()
+
+const buildDate = process.env.BUILD_DATE
 
 const handleConnectClick = async () => {
   console.log("handleConnectClick")
