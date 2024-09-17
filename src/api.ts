@@ -54,23 +54,36 @@ export const updateStatus = async () => {
  * @param loading optional Ref for IonLoading to present and dismiss
  * @param new_route optional new route URL
  * @param set_value optional Ref to store result data
+ * @param data optional data to be sent in the request body (for POST requests)
  * @returns 
  */
 export const apiRequest = async (path: string, method: string = 'get', update_status: boolean = true, 
-    loading?: Ref, new_route?: string, set_value?: Ref) => {
+    loading?: Ref, new_route?: string, set_value?: Ref, data?: any, callback?: (data: any) => void) => {
     // console.log(`postAction: ${action}`)
     // https://www.typescripttutorial.net/typescript-tutorial/typescript-optional-parameters/
     if (loading) {
         // .vue template can also use trigger 
         loading.value.$el.present()
     }
-    return axios({
+
+    const config: any = {
         method: method,
         url: `http://${settings.value.apiAddress}:5000/${path}`
-    })
+    };
+
+    if (method.toLowerCase() === 'post' && data) {
+        config.data = JSON.stringify(data);
+        config.headers = {
+            'Content-Type': 'application/json'
+        };
+    }
+
+    return axios(config)
         .then((resp) => {
             // console.log(resp)
-            if (set_value) {
+            if (callback) {
+                callback(resp.data);
+            } else if (set_value) {
                 set_value.value = resp.data
             }
             // TODO: improve API to return status with response and save this additional request
