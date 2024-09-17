@@ -257,9 +257,18 @@ const applyChanges = () => {
       //const dateTime = zonedTimeToUtc(zonedTime, userTimeZone)
 
       // this updates the Card automatically
-      schedule.next_run = zonedTime.toISOString()
+      // format needs to be 2024-09-17T01:30:00+00:00
+      schedule.next_run = zonedTime.toISOString().replace('Z', '+00:00')
+      // this does not convert to UTC
+      // schedule.next_run = format(zonedTime, "yyyy-MM-dd'T'HH:mm:ssXXX", { timeZone: 'UTC' }).replace('Z', '+00:00')
+      console.log(schedule.next_run)
+
+      // needed for micropython scheduler
+      const at_time = schedule.next_run.split('T')[1].split('+')[0];
+      schedule.at_time = at_time;
     }
 
+    // TODO: handle null scheduledPrograms.value
     // console.log(scheduledPrograms.value)
     const selectedPrograms = scheduledPrograms.value.filter((program: any) => {
       return program.selected

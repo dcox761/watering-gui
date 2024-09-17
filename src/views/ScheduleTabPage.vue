@@ -17,7 +17,7 @@
       </ion-refresher>
       <ion-grid>
         <ion-row v-if="Array.isArray(schedules) && schedules.length > 0" v-for="schedule in schedules"
-          :key="schedule.next_run">
+          :key="schedule.id">
           <ion-col size="12">
             <ion-item-sliding>
               <ion-item>
@@ -73,6 +73,7 @@ import {
   IonRefresherContent, IonRow, IonText, IonTitle, IonToolbar
 } from '@ionic/vue'
 
+import { v4 as uuidv4 } from 'uuid';
 import { ref, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useStore } from '../store'
@@ -115,32 +116,54 @@ onMounted(async () => {
 const updateSchedules = async () => {
   console.log('updateSchedules')
   // TODO: rename API to schedules
+  // TODO: or should result be returned instead of callback?
   return apiRequest('schedule', undefined, false,
-    loading, undefined, schedules).then(() => {
-      sortSchedules(schedules)
+    loading, undefined, undefined, undefined, (data: any) => {
+      sortSchedules(data)
     })
 }
 
-const sortSchedules = (schedules: any) => {
+const postSchedules = async () => {
+  console.log('postSchedules')
+  // TODO: rename API to schedules
+  return apiRequest('schedule', 'post', false,
+    loading, undefined, undefined, schedules.value).then(() => {
+      // TODO: check for error?
+      console.log('completed')
+    })
+
+  // TODO: refresh?
+  // TODO: optimistic locking with version check?
+}
+
+// NOTE: This sets the reactive value for schedules
+const sortSchedules = (data: any) => {
+  console.log('sortSchedules:', data)
   // sort results by next run
   // Result may be Error (eg: if memory allocation failed)
   const { compare } = Intl.Collator('en-US')
-  const results = schedules.value
+  const results = data
   if (results) {
-    console.log(results)
     if (Array.isArray(results)) {
       results.sort((a, b) => compare(a.next_run, b.next_run))
+      results.forEach((result, index) => {
+        result.id = index + 1;
+      });
       schedules.value = results
     }
   } else {
+    schedules.value = []
     console.log(error.value)
   }
 }
 
 const addSchedule = (schedules: any, schedule: any) => {
   // TODO: or refresh instead?
-  schedules.value.push(schedule)
-  sortSchedules(schedules)
+  // TODO: inconsistent use of .value
+  const new_schedules = schedules.value
+  delete currentSchedule.value.new
+  new_schedules.push(schedule)
+  sortSchedules(new_schedules)
 }
 
 const updatePrograms = async () => {
@@ -177,19 +200,16 @@ const handleApply = async (updatedSchedule: any) => {
   if (isEditing.value) {
     // Update the existing schedule
     // TODO: re-sort the schedule
-  } else {
+  } else if (currentSchedule.value && currentSchedule.value.new) {
     // Add the new schedule
-    if (currentSchedule.value && currentSchedule.value.new) {
-      delete currentSchedule.value.new
-      addSchedule(schedules, currentSchedule.value)
-    }
+    addSchedule(schedules, currentSchedule.value)
   }
-  // TODO: upload changes (if any)
+  await postSchedules()
 }
 
 const handleSkipClick = async (schedule: any) => {
   // TODO: skip to tomorrow or next schedule?
-  console.log("TODO handleSkipClick")
+  console.log("TODO handleSkipClick - NOT IMPLEMENTED")
   closeSlidingItem()
 }
 
@@ -201,7 +221,7 @@ const presentDeleteConfirm = (schedule: any) => {
 const handleDeleteClick = async (schedule: any) => {
   console.log('Delete schedule:', schedule)
   schedules.value = schedules.value.filter((s: any) => s !== schedule)
-  // TODO: upload schedule if changed
+  await postSchedules()
 }
 
 const closeSlidingItem = () => {
@@ -218,10 +238,16 @@ const handleAddClick = () => {
   now.setMinutes(0, 0, 0)
   now.setHours(now.getHours() + 1)
 
+  // TODO: pass blank instead and create with EditSchedule
+  // TODO: API should be simpler
   const newSchedule = {
-    id: Date.now(), // or any unique identifier
+    // id not required, will be added by sortSchedules
     next_run: now.toISOString(),
     interval: 0,
+    latest: null, // required to prevent error
+    cancel_after: null, 
+    args: [], // required to prevent error
+    job_func_name: "queue_program",
     unit: 'days',
     kwargs: {
       program: ''
