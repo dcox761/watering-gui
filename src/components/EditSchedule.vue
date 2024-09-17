@@ -165,7 +165,7 @@ watch(() => props.schedule, (schedule) => {
     })
 
     // console.log(schedule)
-    if (schedule.interval == 0) {
+    if (schedule.cancel_after) {
       editRepeat.value = 'none'
     } else if (schedule.unit == 'days') {
       editRepeat.value = 'daily'
@@ -242,7 +242,7 @@ const handleDismiss = () => {
  * Apply button on Modal dialog has been clicked.
  * - set next_run, adjusting for time zone
  * - set programs selected from the list
- * - adjust interval, unit and start_day
+ * - adjust cancel_after, at_time, interval, unit and start_day
  * - close the dialog
  */
 const applyChanges = () => {
@@ -256,6 +256,8 @@ const applyChanges = () => {
       // Use date-fns-tz to convert from a zoned time to UTC
       //const dateTime = zonedTimeToUtc(zonedTime, userTimeZone)
 
+      // TODO: check if time is in the past
+      
       // this updates the Card automatically
       // format needs to be 2024-09-17T01:30:00+00:00
       schedule.next_run = zonedTime.toISOString().replace('Z', '+00:00')
@@ -263,36 +265,42 @@ const applyChanges = () => {
       // schedule.next_run = format(zonedTime, "yyyy-MM-dd'T'HH:mm:ssXXX", { timeZone: 'UTC' }).replace('Z', '+00:00')
       console.log(schedule.next_run)
 
-      // needed for micropython scheduler
-      const at_time = schedule.next_run.split('T')[1].split('+')[0];
-      schedule.at_time = at_time;
-    }
+      // TODO: handle null scheduledPrograms.value
+      // console.log(scheduledPrograms.value)
+      const selectedPrograms = scheduledPrograms.value.filter((program: any) => {
+        return program.selected
+      })
+      setScheduledPrograms(schedule, new Set(Object.values(selectedPrograms).map((program: any) => {
+        return program.name
+      })))
 
-    // TODO: handle null scheduledPrograms.value
-    // console.log(scheduledPrograms.value)
-    const selectedPrograms = scheduledPrograms.value.filter((program: any) => {
-      return program.selected
-    })
-    setScheduledPrograms(schedule, new Set(Object.values(selectedPrograms).map((program: any) => {
-      return program.name
-    })))
+      if (editRepeat.value == 'none') {
+        schedule.unit = "hours"
+        schedule.interval = 1
+        schedule.start_day = null
+        const cancelAfterTime = new Date(zonedTime.getTime() + 10 * 60000);
+        schedule.cancel_after = cancelAfterTime.toISOString().replace('Z', '+00:00');
+      } else {
 
-    var interval = 0
-    if (editRepeat.value == 'weekly') {
-      interval = 1
-      schedule.unit = 'weeks'
-      schedule.start_day = editWeekday.value
-    } else {
-      schedule.unit = 'days'
-      schedule.start_day = null
-      if (editRepeat.value == 'daily') {
-        interval = Number(editInterval.value)
+        // needed for micropython scheduler to calculate next_run
+        const at_time = schedule.next_run.split('T')[1].split('+')[0];
+        schedule.at_time = at_time;
+        schedule.cancel_after = null
+
+        if (editRepeat.value == 'daily') {
+          schedule.unit = 'days'
+          schedule.interval = Number(editInterval.value)
+          schedule.start_day = null
+        } else if (editRepeat.value == 'weekly') {
+          schedule.unit = 'weeks'
+          schedule.interval = 1
+          schedule.start_day = editWeekday.value
+        }
       }
-    }
-    schedule.interval = interval
-  }
 
-  emit('apply', {})
+      emit('apply', {})
+    }
+  }
   closeModal()
 }
 

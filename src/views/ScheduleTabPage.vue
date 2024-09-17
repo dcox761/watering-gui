@@ -209,6 +209,7 @@ const handleApply = async (updatedSchedule: any) => {
 
 const handleSkipClick = async (schedule: any) => {
   // TODO: skip to tomorrow or next schedule?
+  // TODO: test last_run = next_run, next_run = null
   console.log("TODO handleSkipClick - NOT IMPLEMENTED")
   closeSlidingItem()
 }
@@ -234,21 +235,22 @@ const closeSlidingItem = () => {
 const handleAddClick = () => {
   console.log("handleAddClick")
 
-  const now = new Date()
-  now.setMinutes(0, 0, 0)
-  now.setHours(now.getHours() + 1)
+  const next_hour = new Date()
+  next_hour.setMinutes(0, 0, 0)
+  next_hour.setHours(next_hour.getHours() + 1)
+  const next_hour_iso = next_hour.toISOString()
 
-  // TODO: pass blank instead and create with EditSchedule
-  // TODO: API should be simpler
+  // TODO: pass blank instead and create with EditSchedule? but EditSchedule watches props.schedule
+  // TODO: API should be simpler, ie. it should handle required fields
   const newSchedule = {
     // id not required, will be added by sortSchedules
-    next_run: now.toISOString(),
-    interval: 0,
+    next_run: next_hour_iso,
+    interval: 1,
     latest: null, // required to prevent error
-    cancel_after: null, 
+    cancel_after: next_hour_iso, 
     args: [], // required to prevent error
     job_func_name: "queue_program",
-    unit: 'days',
+    unit: 'hours',
     kwargs: {
       program: ''
     },
@@ -274,7 +276,7 @@ function describePrograms(schedule: any): string {
  */
 function describeInterval(schedule: any): string {
   var result = ""
-  if (schedule.interval == 0) {
+  if (schedule.cancel_after) {
     result = "One off"
   } else if (schedule.interval == 1) {
     if (schedule.unit == 'days') {
