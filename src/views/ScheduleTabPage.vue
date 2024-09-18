@@ -172,11 +172,11 @@ const updatePrograms = async () => {
     loading, undefined, programs)
 }
 
-const handleRefresh = async (event: CustomEvent) => {
+const handleRefresh = async (event?: CustomEvent) => {
   console.log('handleRefresh')
   return updateSchedules()
     .then(() => {
-      if (event.target) {
+      if (event?.target) {
         (event.target as HTMLIonRefresherElement).complete()
       }
     })
@@ -199,19 +199,53 @@ const handleApply = async (updatedSchedule: any) => {
   console.log('handleApply', updatedSchedule)
   if (isEditing.value) {
     // Update the existing schedule
-    // TODO: re-sort the schedule
   } else if (currentSchedule.value && currentSchedule.value.new) {
     // Add the new schedule
     addSchedule(schedules, currentSchedule.value)
   }
   await postSchedules()
+  await handleRefresh()
 }
 
+
 const handleSkipClick = async (schedule: any) => {
-  // TODO: skip to tomorrow or next schedule?
-  // TODO: test last_run = next_run, next_run = null
-  console.log("TODO handleSkipClick - NOT IMPLEMENTED")
+  // TODO: show current date and time in header? (or time on unit from API)
+  console.log("handleSkipClick")
   closeSlidingItem()
+
+  // if more than 7 days away, it subtracts 1 week
+  // need to calculate next_run as the next selected weekday after current schedule at specific time
+  if (schedule.unit === 'weeks') {
+    const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const startDayIndex = daysOfWeek.indexOf(schedule.start_day);
+    console.log('startDayIndex:', startDayIndex);
+    const nextRunDate = parseISODateTime(schedule.next_run);
+    if (startDayIndex !== -1 && nextRunDate) {
+      console.log('Current next_run:', schedule.next_run);
+      console.log('Parsed nextRunDate:', nextRunDate);
+
+      const currentDayIndex = nextRunDate.getDay();
+      const daysToAdd = (startDayIndex + 7 - currentDayIndex) % 7 || 7;
+      nextRunDate.setDate(nextRunDate.getDate() + daysToAdd);
+      console.log('Adjusted nextRunDate after setting day:', nextRunDate);
+
+      const [hours, minutes] = schedule.at_time.split(':').map(Number);
+      console.log('Parsed hours and minutes:', hours, minutes);
+
+      // Convert GMT time to local time
+      nextRunDate.setUTCHours(hours, minutes, 0, 0);
+      console.log('Final nextRunDate after setting time:', nextRunDate);
+
+      schedule.next_run = nextRunDate.toISOString().replace('Z', '+00:00');
+      console.log('Updated schedule.next_run:', schedule.next_run);
+    }
+  } else {
+    // works for Daily, not Weekly
+    schedule.last_run = schedule.next_run
+    schedule.next_run = null
+  }
+  await postSchedules()
+  await handleRefresh()
 }
 
 const presentDeleteConfirm = (schedule: any) => {

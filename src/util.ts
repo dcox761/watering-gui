@@ -2,10 +2,12 @@
 // TODO: it is also called each time any tab is selected
 export function parseISODateTime(dateTimeStr: string): Date | null {
     var result = null
-    try {
-        result = new Date(dateTimeStr)
-    } catch (TypeError) {
-        // ignore
+    if (dateTimeStr) {
+        try {
+            result = new Date(dateTimeStr)
+        } catch (TypeError) {
+            // ignore
+        }
     }
     return result
 }
