@@ -74,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-import { format, utcToZonedTime } from 'date-fns-tz'
+import { format, toZonedTime } from 'date-fns-tz'
 import {
   IonButton, IonButtons, IonCheckbox, IonCol, IonContent, IonDatetime, IonDatetimeButton,
   IonFooter, IonGrid, IonHeader, IonItem, IonLabel, IonList, IonModal, IonRow,
@@ -146,7 +146,7 @@ watch(() => props.schedule, (schedule) => {
     // var dayOfWeek = 'monday'
     if (dateTime) {
       // Use date-fns-tz to convert from UTC to a zoned time
-      const zonedTime = utcToZonedTime(dateTime, userTimeZone)
+      const zonedTime = toZonedTime(dateTime, userTimeZone)
       selected_dtm.value = format(zonedTime, "yyyy-MM-dd'T'HH:mm:ssXXX", { timeZone: userTimeZone })
       // dayOfWeek = zonedTime.toLocaleString('en-US', { weekday: 'long' }).toLowerCase()
       // console.log(dayOfWeek)
