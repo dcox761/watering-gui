@@ -11,6 +11,7 @@ export default defineConfig({
     VitePWA({ registerType: 'autoUpdate', manifest: false })
     // legacy()
   ],
+  base: '/watering-gui/',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -24,3 +25,4 @@ export default defineConfig({
     environment: 'jsdom'
   }
 })
+
