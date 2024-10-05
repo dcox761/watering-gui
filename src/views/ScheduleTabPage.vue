@@ -73,7 +73,6 @@ import {
   IonRefresherContent, IonRow, IonText, IonTitle, IonToolbar
 } from '@ionic/vue'
 
-import { v4 as uuidv4 } from 'uuid';
 import { ref, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useStore } from '../store'
