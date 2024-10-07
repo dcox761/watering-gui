@@ -18,7 +18,7 @@
       <ion-list v-if="events && events.length > 0">
         <ion-item v-for="event in events">
           <ion-label class="ion-text-nowrap" style="flex: 0 0 auto; margin-right: 10px; white-space: nowrap;">{{ event.date }} {{ event.time }} {{ event.source }}</ion-label>
-          <ion-label class="ion-text-wrap" style="flex: 1 1 auto;">{{ event.details }}</ion-label>
+          <ion-label class="ion-text-wrap" style="flex: 1 1 auto;" v-html="event.details"></ion-label>
         </ion-item>
       </ion-list>
       <ion-grid v-else>
@@ -63,14 +63,16 @@ const updateEvents = async () => {
   console.log('updateEvents')
   return apiRequest('events', undefined, false,
     loading, undefined, undefined, undefined, (data: any) => {
-    const parsedEvents = data.split('\n').map(line => {
+    const parsedEvents = data.split('\n').reduce((acc, line) => {
       const match = line.match(/^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2}):(.*?):(.*?)$/)
       if (match) {
         const [_, date, time, source, details] = match
-        return { date, time, source, details }
+        acc.push({ date, time, source, details })
+      } else if (acc.length > 0) {
+        acc[acc.length - 1].details += '<br/>' + line
       }
-      return null
-    }).filter(event => event !== null)
+      return acc
+    }, [])
     events.value = parsedEvents.reverse()
   })  
 }
