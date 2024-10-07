@@ -33,7 +33,7 @@
                 <ion-item-option color="primary" @click="openEditModal(true, schedule)">
                   Edit
                 </ion-item-option>
-                <ion-item-option color="warning" @click="handleSkipClick(schedule)">
+                <ion-item-option v-if="parseISODateTime(schedule['next_run']) <= new Date(Date.now() + 48 * 60 * 60 * 1000)" color="warning" @click="handleSkipClick(schedule)">
                   Skip
                 </ion-item-option>
                 <ion-item-option color="danger" @click="presentDeleteConfirm(schedule)">
