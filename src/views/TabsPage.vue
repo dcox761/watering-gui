@@ -19,8 +19,13 @@
         </ion-tab-button>
 
         <ion-tab-button tab="schedule" href="/tabs/schedule">
-          <ion-icon aria-hidden="true" :icon="time" />
+          <ion-icon aria-hidden="true" :icon="calendar" />
           <ion-label>Schedule</ion-label>
+        </ion-tab-button>
+
+        <ion-tab-button tab="events" href="/tabs/events">
+          <ion-icon aria-hidden="true" :icon="time" />
+          <ion-label>Events</ion-label>
         </ion-tab-button>
       </ion-tab-bar>
     </ion-tabs>
@@ -29,5 +34,5 @@
 
 <script setup lang="ts">
 import { IonTabBar, IonTabButton, IonTabs, IonLabel, IonIcon, IonPage, IonRouterOutlet } from '@ionic/vue'
-import { ellipse, square, triangle, time, settings } from 'ionicons/icons'
+import { ellipse, square, triangle, calendar, time, settings } from 'ionicons/icons'
 </script>
