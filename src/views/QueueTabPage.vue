@@ -15,7 +15,7 @@
       <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
         <ion-refresher-content />
       </ion-refresher>
-      <ion-list v-if="status && status.stations.length > 0">
+      <ion-list v-if="status && status.tasks.length > 0">
         <ion-item>
           <ion-grid>
             <ion-row>
@@ -37,14 +37,14 @@
             </ion-row>
           </ion-grid>
         </ion-item>
-        <ion-item v-for="station in status.stations">
+        <ion-item v-for="station in status.tasks">
           <ion-grid>
             <ion-row>
               <ion-col>
                 <ion-label>{{ station.name }}</ion-label>
               </ion-col>
               <ion-col>
-                <ion-label>{{ station.run_time }} min</ion-label>
+                <ion-label>{{ Math.round(station.duration_sec / 60) }} min</ion-label>
               </ion-col>
               <ion-col>
                 <ion-icon class="right-blue" :icon="water" v-if="station.on" />
