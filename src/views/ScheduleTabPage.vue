@@ -33,7 +33,7 @@
                 <ion-item-option color="primary" @click="openEditModal(true, schedule)">
                   Edit
                 </ion-item-option>
-                <ion-item-option v-if="parseISODateTime(schedule['next_run']) <= new Date(Date.now() + 48 * 60 * 60 * 1000)" color="warning" @click="handleSkipClick(schedule)">
+                <ion-item-option v-if="showSkipButton(schedule)" color="warning" @click="handleSkipClick(schedule)">
                   Skip
                 </ion-item-option>
                 <ion-item-option color="danger" @click="presentDeleteConfirm(schedule)">
@@ -88,7 +88,7 @@ addIcons({
 })
 
 const store = useStore()
-const { error } = storeToRefs(store)
+const { errorMsg } = storeToRefs(store)
 
 const isEditModalOpen = ref(false)
 const isEditing = ref(false)
@@ -152,7 +152,7 @@ const sortSchedules = (data: any) => {
     }
   } else {
     schedules.value = []
-    console.log(error.value)
+    console.log(errorMsg.value)
   }
 }
 
@@ -291,6 +291,21 @@ const handleAddClick = () => {
   }
 
   openEditModal(false, newSchedule)
+}
+
+/**
+ * Skip button should only be shown if the scheduled next run is within 48 hours.
+ * 
+ * @param schedule 
+ */
+function showSkipButton(schedule: any): boolean {
+  if (schedule['next_run']) {
+    const nextRun = parseISODateTime(schedule['next_run']) 
+    if (nextRun && nextRun <= new Date(Date.now() + 48 * 60 * 60 * 1000)) {
+      return true
+    }
+  }
+  return false
 }
 
 function initCaps(str: string, max_length: any = undefined) {

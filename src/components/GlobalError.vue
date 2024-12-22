@@ -1,7 +1,7 @@
 <template>
   <ion-toast
-    :isOpen="!!error"
-    :message="`${error}`"
+    :isOpen="!!errorMsg"
+    :message="`${errorMsg}`"
     duration="0"
     position="top"
     :buttons="[{ text: 'Dismiss', handler: clearError }]"
@@ -14,7 +14,7 @@ import { storeToRefs } from 'pinia'
 import { useStore } from '../store'
 
 const store = useStore()
-const { error } = storeToRefs(store)
+const { errorMsg } = storeToRefs(store)
 
 const clearError = () => {
   store.clearError()

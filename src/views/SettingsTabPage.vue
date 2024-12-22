@@ -24,6 +24,7 @@
           </ion-col>
         </ion-row>
       </ion-grid>
+      <p v-if="!!ex">{{ ex }}</p>
     </ion-content>
     <ion-footer>
       <ion-toolbar>
@@ -46,7 +47,7 @@ import { useStore } from '../store'
 import { apiRequest } from "../api"
 
 const store = useStore()
-const { settings } = storeToRefs(store)
+const { settings, ex } = storeToRefs(store)
 
 const loading = ref()
 

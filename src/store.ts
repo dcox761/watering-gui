@@ -15,7 +15,8 @@ const getSettings = () => {
 export const useStore = defineStore(STORE_NAME, () => {
   const settings = ref(getSettings())
   const status = ref(null)
-  const error = ref("")
+  const errorMsg = ref("")
+  const ex = ref()
 
   const updateSettings = (partialSettings: any) => {
     settings.value = {
@@ -29,18 +30,21 @@ export const useStore = defineStore(STORE_NAME, () => {
     localStorage.setItem(STORE_NAME, JSON.stringify(settings.value))
   }
 
-  const setError = (message: string) => {
-    error.value = message
+  const setError = (err: Error) => {
+    errorMsg.value = `Error: ${err.message}`
+    ex.value = err
   }
 
   const clearError = () => {
-    error.value = ""
+    errorMsg.value = ""
+    ex.value = null
   }
 
   return {
     settings,
     status,
-    error,
+    errorMsg,
+    ex,
     updateSettings,
     save,
     setError,

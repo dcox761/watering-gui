@@ -5,7 +5,7 @@ import axios from "axios"
 import router from './router/index'
 
 const store = useStore()
-const { settings, status, error } = storeToRefs(store)
+const { settings, status } = storeToRefs(store)
 
 /*
 Hint: router
@@ -33,7 +33,7 @@ export const updateStatus = async () => {
         .catch(err => {
             console.log(err)
             status.value = null
-            store.setError(`Error: ${err.message}`)
+            store.setError(err)
         })
 }
 
@@ -68,14 +68,16 @@ export const apiRequest = async (path: string, method: string = 'get', update_st
 
     const config: any = {
         method: method,
-        url: `http://${settings.value.apiAddress}:5000/${path}`
+        url: `http://${settings.value.apiAddress}:5000/${path}`,
+        timeout: 5000,
+        headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+        }
     };
 
     if (method.toLowerCase() === 'post' && data) {
         config.data = JSON.stringify(data);
-        config.headers = {
-            'Content-Type': 'application/json'
-        };
     }
 
     return axios(config)
@@ -102,7 +104,7 @@ export const apiRequest = async (path: string, method: string = 'get', update_st
             // keep the status set, it may just be a POST that failed
             // status.value = null
 
-            store.setError(`Error: ${err.message}`)
+            store.setError(err)
         })
         .finally(() => {
             if (loading) {
