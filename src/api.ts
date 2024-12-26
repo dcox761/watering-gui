@@ -24,7 +24,7 @@ export const updateStatus = async () => {
     console.log(`store.updateStatus: ${settings.value.apiAddress}`)
 
     // TODO: add loading with spinner (needs to be handled by component)
-    return axios.get(`http://${settings.value.apiAddress}:5000/queue/status`)
+    return axios.get(`https://${settings.value.apiAddress}/queue/status`)
         .then(resp => {
             console.log(resp)
             status.value = resp.data
@@ -68,16 +68,15 @@ export const apiRequest = async (path: string, method: string = 'get', update_st
 
     const config: any = {
         method: method,
-        url: `http://${settings.value.apiAddress}:5000/${path}`,
-        timeout: 5000,
-        headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-        }
+        url: `https://${settings.value.apiAddress}/${path}`,
+        timeout: 5000
     };
 
     if (method.toLowerCase() === 'post' && data) {
         config.data = JSON.stringify(data);
+        config.headers = {
+            'Content-Type': 'application/json'
+        };
     }
 
     return axios(config)
