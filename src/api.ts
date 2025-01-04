@@ -7,13 +7,16 @@ import router from './router/index'
 const store = useStore()
 const { settings, status } = storeToRefs(store)
 
-/*
-Hint: router
-In a .vue file:
-import { useRouter } from 'vue-router'
-const router = useRouter() 
-*/
 
+function baseAPIUrl() {
+    const address = settings.value.apiAddress
+    if (address === 'localhost') {
+        return `http://${address}:5000`;
+    } else {
+        return `https://${address}`
+    }
+  }
+  
 /**
  * Retrieve status from the API.
  * 
@@ -24,7 +27,7 @@ export const updateStatus = async () => {
     console.log(`store.updateStatus: ${settings.value.apiAddress}`)
 
     // TODO: add loading with spinner (needs to be handled by component)
-    return axios.get(`https://${settings.value.apiAddress}/queue/status`)
+    return axios.get(`${baseAPIUrl()}/queue/status`)
         .then(resp => {
             console.log(resp)
             status.value = resp.data
@@ -68,7 +71,7 @@ export const apiRequest = async (path: string, method: string = 'get', update_st
 
     const config: any = {
         method: method,
-        url: `https://${settings.value.apiAddress}/${path}`,
+        url: `${baseAPIUrl()}/${path}`,
         timeout: 5000
     };
 
