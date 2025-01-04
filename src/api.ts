@@ -30,7 +30,14 @@ export const updateStatus = async () => {
     return axios.get(`${baseAPIUrl()}/queue/status`)
         .then(resp => {
             console.log(resp)
-            status.value = resp.data
+            if (resp.data) {
+
+                // calculate max duration
+                resp.data.maxDuration = Math.max(...(resp.data?.tasks.map((station: { duration_sec: number }) => station.duration_sec) || [0]));
+                status.value = resp.data
+            } else {
+                status.value = null
+            }
             store.clearError()
         })
         .catch(err => {

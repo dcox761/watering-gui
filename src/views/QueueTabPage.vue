@@ -53,7 +53,8 @@
             </ion-row>
             <ion-row>
               <ion-col>
-                <ion-progress-bar :value="station.completion" />
+                <ion-progress-bar :value="station.completion" :style="{ width: (station.duration_sec / status.maxDuration) * 100 + '%' }">
+                </ion-progress-bar>
               </ion-col>
             </ion-row>
           </ion-grid>
@@ -87,6 +88,7 @@ const store = useStore()
 interface Status {
   tasks: { name: string; duration_sec: number; on: boolean; current: boolean; completion: number }[];
   pause_min: number;
+  maxDuration: number;
 }
 
 const { status } = storeToRefs(store) as { status: Ref<Status | null> }
