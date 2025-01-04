@@ -37,7 +37,7 @@
             </ion-row>
           </ion-grid>
         </ion-item>
-        <ion-item v-for="station in status.tasks">
+        <ion-item v-for="(station, index) in status.tasks" :key="index + station.name">
           <ion-grid>
             <ion-row>
               <ion-col>
@@ -47,7 +47,7 @@
                 <ion-label>{{ Math.round(station.duration_sec / 60) }} min</ion-label>
               </ion-col>
               <ion-col>
-                <ion-icon class="right-blue" :icon="water" v-if="station.on" />
+                <ion-icon class="right-blue" :icon="water" v-if="station.on && station.current" />
                 <ion-icon class="right-grey" :icon="water" v-else-if="station.current" />
               </ion-col>
             </ion-row>
@@ -78,13 +78,18 @@ import {
   IonRefresher, IonRefresherContent, IonButton, IonLoading, IonText
 } from '@ionic/vue'
 
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, Ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useStore } from '../store'
 import { updateStatus, apiRequest } from "../api"
 
 const store = useStore()
-const { status } = storeToRefs(store)
+interface Status {
+  tasks: { name: string; duration_sec: number; on: boolean; current: boolean; completion: number }[];
+  pause_min: number;
+}
+
+const { status } = storeToRefs(store) as { status: Ref<Status | null> }
 
 const loading = ref()
 
@@ -104,7 +109,7 @@ const handleRefresh = async (event: CustomEvent) => {
   return updateStatus()
     .then(() => {
       if (event.target) {
-        event.target.complete()
+        (event.target as HTMLIonRefresherElement).complete()
       }
     })
 }
